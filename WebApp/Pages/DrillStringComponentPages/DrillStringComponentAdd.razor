@@ -1,0 +1,182 @@
+
+@inject ISnackbar Snackbar
+@implements IUnitAwareComponent
+@inject ILogger<MudInputWithUnitAdornment> logger
+<MudContainer>
+    <MudPaper Class="my-2 py-2">         
+    <MudGrid Class="mx-2 mb-2 align-end" Spacing="5">
+        <MudItem xs="2">
+            <MudTextField @bind-Value="drillStringComponentName" Label="Component name" Variant="Variant.Text"></MudTextField>                                                     
+        </MudItem>
+        <MudItem xs="2">
+              <MudSelect @bind-Value="typeSelectOptions" Label="Component type" Dense="true" Class="ml-4">                                                                    
+                         
+                  @foreach (DrillStringComponentTypes componentType in Enum.GetValues(typeof(DrillStringComponentTypes)))
+                  {
+                      <MudSelectItem Value="@componentType">@componentType</MudSelectItem>
+                  }  
+              </MudSelect>                         
+        </MudItem>
+        <MudItem xs="2">
+            @if (fieldIdToNameDict != null)
+            {                
+                <MudSelect @bind-Value="fieldID" Label="Field name" Dense="true" Class="ml-4"
+                    Text="@getFieldIdClient.CheckGuidExistance(fieldID, fieldIdToNameDict)">                                
+                    @foreach (Guid fieldIdAndName in fieldIdToNameDict.Keys)
+                    {
+                        <MudSelectItem Value="@fieldIdAndName">@fieldIdToNameDict[fieldIdAndName]</MudSelectItem>
+                    }  
+                </MudSelect>                 
+            }        
+        </MudItem>
+        <MudItem xs="5">
+            <MudToolBar>
+                <MudSpacer/>
+                <MudButton StartIcon="@Icons.Material.Filled.Add"  IconColor="Color.Tertiary"  OnClick="AddPart" Size="Size.Small"> Add part </MudButton>        
+                <MudButton StartIcon="@Icons.Material.Filled.Remove"  IconColor="Color.Secondary"  OnClick="RemovePart " Size="Size.Small"> Remove part</MudButton>                                  
+                <MudSwitch @bind-Value="AdvancedComponentEditionTrue" Color="Color.Tertiary" UncheckedColor="Color.Secondary" Label="Advanced"/>      
+            </MudToolBar>                        
+        </MudItem>             
+    </MudGrid>
+    @for (int i = 0; i < drillStringComponentParts.Count; i += 1)
+    {
+        int index = i;     
+        <DrillStringPartEditor ComponentPartsList="drillStringComponentParts" 
+            index ="index" AdvancedComponentEditionTrue ="AdvancedComponentEditionTrue"/>
+    }
+    <MudGrid Justify="Justify.FlexEnd">    
+        <MudItem xs="2">        
+            <MudButton StartIcon="@Icons.Material.Filled.SaveAs"  IconColor="Color.Tertiary" OnClick="AddDrillStringComponent " Size="Size.Medium"> Submit </MudButton>                 
+        </MudItem>  
+    </MudGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {    
+    private GetDigiWellClassClient getFieldIdClient = new GetDigiWellClassClient(TypeSelect.Field);
+    private Dictionary<Guid, string> fieldIdToNameDict = new();
+    private Guid fieldID {get; set;}
+    private List<DrillStringComponentPart> drillStringComponentParts = new List<DrillStringComponentPart>()
+        {   
+            new DrillStringComponentPart()
+            {
+                ID = Guid.NewGuid(),
+                Name = "",
+                InnerDiameter = 0.0,
+                OuterDiameter = 0.0,
+                TotalLength = 0.0,
+                YoungModulus = 220E9,
+                PoissonRatio = 0.28,
+                MaterialDensity = 7800.0,
+                AveragePartDensity = 7800.0,
+                HeatCapacity = 510.0,
+                ThermalCondutivity = 54.0,
+                Mass = 0.0,
+                FirstCrossSectionTorsionalInertia = 0.0,
+                SecondCrossSectionTorsionalInertia = null
+            }       
+        };
+    private int numberOfParts = 1;
+    private bool AdvancedComponentEditionTrue { get; set; } = false;
+    private string drillStringComponentName = "";
+    private DrillStringComponentTypes typeSelectOptions {get; set;} = DrillStringComponentTypes.DrillPipe;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Load fields from other microservices
+        await getFieldIdClient.GetAllAsync(fieldIdToNameDict);
+    }
+    private void AddPart()
+    {
+        numberOfParts += 1;
+        drillStringComponentParts.Add(
+            new DrillStringComponentPart
+            {
+                ID = Guid.NewGuid(),
+                Name = "",
+                InnerDiameter = 0.0,
+                OuterDiameter = 0.0,
+                TotalLength = 0.0,
+                YoungModulus = 220E9,
+                PoissonRatio = 0.28,
+                MaterialDensity = 7800.0,
+                AveragePartDensity = 7800.0,
+                HeatCapacity = 510.0,
+                ThermalCondutivity = 54.0,
+                Mass = 0.0,
+                FirstCrossSectionTorsionalInertia = 0.0,
+                SecondCrossSectionTorsionalInertia = null
+            }
+        );
+    }
+    private void RemovePart() 
+    {
+        if (drillStringComponentParts.Count == 1)
+        {
+
+        }
+        else
+        {
+            drillStringComponentParts.RemoveAt(drillStringComponentParts.Count - 1);       
+            numberOfParts -= 1;
+        }
+    }
+    private async Task AddDrillStringComponent()
+    {
+        try
+        {
+            
+            //ScalarDrillingProperty myDerivedData1Param = new ScalarDrillingProperty() { DiracDistributionValue = new DiracDistribution() { Value = 1.0 } };
+            List<DrillStringComponentPart>? drillStringComponentPartList = new(); 
+            for (int i = 0; i < numberOfParts; i += 1 )
+            {
+                //Check if there is an input for the minimal geometrical data required
+                if (drillStringComponentParts[i].OuterDiameter * drillStringComponentParts[i].TotalLength != 0.0)
+                {
+                        drillStringComponentPartList.Add(drillStringComponentParts[i]);
+                }
+            }
+           
+            if (drillStringComponentPartList.Count > 0)
+            {
+                MetaInfo metaInfo = new() { ID = Guid.NewGuid(), HttpHostName = APIUtils.HostNameDrillString, HttpHostBasePath = APIUtils.HostBasePathDrillString, HttpEndPoint = "DrillString/" };
+                DateTimeOffset creationDate = DateTimeOffset.UtcNow;
+                //Create instance of new element
+                DrillStringComponent currentDrillStringComponent = new DrillStringComponent 
+                {
+                    MetaInfo = metaInfo,
+                    Name = drillStringComponentName, 
+                    CreationDate = creationDate,
+                    LastModificationDate = creationDate,
+                    Type = typeSelectOptions,
+                    FieldID = fieldID, 
+                    PartList = drillStringComponentPartList
+                };            
+                await APIUtils.ClientDrillString.PostDrillStringComponentAsync(currentDrillStringComponent);
+                logger.LogInformation($"{typeSelectOptions.ToString()} component posted successfully");
+                Snackbar.Add($"{typeSelectOptions.ToString()} component posted successfully", Severity.Success);
+                //Restart values to default and go back to main drillpipe table
+                drillStringComponentParts.Clear();
+                drillStringComponentName = "";
+                AddPart();
+                numberOfParts = 1;        
+                //if drillStringComponentPartList == null, the above try will fail
+           }
+            else
+            {
+                logger.LogError("Impossible to add a new component");
+                Snackbar.Add("Impossible to add a new component. Check for zero values in the OD, ID and Length elements.", Severity.Warning);            
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Impossible to add a new component");
+            Snackbar.Add("Impossible to add a new component", Severity.Warning);
+        }
+        StateHasChanged();
+        //await OnInitializedAsync();
+    }
+    
+    public void ManageUnits()
+    {
+    }
+}

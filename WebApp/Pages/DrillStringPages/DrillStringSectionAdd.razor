@@ -1,0 +1,83 @@
+
+    <MudPaper Style="@($"background:{createRowColor()};")" Width="100%" Class="my-2">
+        <MudGrid Class="ml-10">  
+            <MudItem xs="3">
+                <MudTextField 
+                    @bind-Value="drillStringSections[index].Name" Label="Section name" T="string" Variant="Variant.Text">
+                </MudTextField>   
+            </MudItem>
+            <!-- number of sections -->
+            <MudItem xs="2">
+                <MudNumericField 
+                    HideSpinButtons="false" @bind-Value="drillStringSections[index].Count" Label="Repetitions" T="int" Variant="Variant.Text" Min="1" Max="10000">
+                </MudNumericField>   
+            </MudItem>
+            <MudItem xs="2">
+                <MudNumericField 
+                    HideSpinButtons="false" Value="numberOfComponents" ValueChanged="UpdateComponentListSize" Label="Number of components" T="int" Variant="Variant.Text" Min="1" Max="20">
+                </MudNumericField>   
+            </MudItem>
+            <MudItem xs="4">
+                <MudText Typo="Typo.body2" Align="Align.Right" Style="@($"color:{Colors.Gray.Darken1};")">
+                    Section #@($"{(index+1).ToString()}")
+                </MudText>
+            </MudItem>
+            <MudFlexBreak/>
+            @for(int i = 0; i<numberOfComponents; i ++ )
+            {
+                int indexComponent = i;      
+                    <DrillStringComponentSelector componentNumber="indexComponent" drillStringComponents="drillStringComponents" 
+                        drillStringSection="drillStringSections[index]" selectedDrillStringComponents="selectedDrillStringComponents"
+                        indexComponent="indexComponent"/>        
+            }
+        </MudGrid>  
+        <br>
+    </MudPaper>    
+
+
+@code{
+
+    [Parameter]
+    public int index {get; set;}
+    [Parameter]
+    public List<DrillStringComponent> drillStringComponents {get; set;}
+    [Parameter]
+    public List<DrillStringSection> drillStringSections {get; set;}
+    
+    //Initiate with a single component
+    public List<DrillStringComponent> selectedDrillStringComponents = new List<DrillStringComponent>{new DrillStringComponent()};
+    private string?[] selectedComponentsInSection = new string?[20]; 
+    private int numberOfComponents = 1;
+
+
+    private string createRowColor()
+    {        
+        if (2*(index/2) - index  == 0)
+        {
+            return Colors.Gray.Lighten5;   
+        }
+        else
+        {
+            return Colors.Gray.Lighten3;
+        }
+    }
+    private void UpdateComponentListSize(int compNum)
+    {
+        numberOfComponents = compNum;
+        if (selectedDrillStringComponents.Count < numberOfComponents)
+        {
+            while(selectedDrillStringComponents.Count < numberOfComponents)
+            {
+                selectedDrillStringComponents.Add(new DrillStringComponent(){});
+            }            
+        }
+    
+        else if (selectedDrillStringComponents.Count > numberOfComponents)
+        {
+            while(selectedDrillStringComponents.Count > numberOfComponents)
+            {
+                selectedDrillStringComponents.RemoveAt(selectedDrillStringComponents.Count - 1);
+            }            
+        }   
+    }
+}

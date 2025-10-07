@@ -1,0 +1,381 @@
+﻿@page "/DrillString"
+@inject ILogger<DrillStringMain> logger
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<MudUnitAndReferenceChoiceTag HttpHost=@APIUtils.HostNameUnitConversion
+                              HttpBasePath=@APIUtils.HostBasePathUnitConversion
+                              HttpController="UnitSystem/"
+                              UnitSystemName="@DataUtils.UnitAndReferenceParameters.UnitSystemName"
+                              UnitSystemNameChanged="@DataUtils.UpdateUnitSystemName">
+    @if (drillStringList == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        @if (displayMainPanel)
+        {
+            <MudPaper Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudDivider />
+                    <MudDataGrid T="DrillString" MultiSelection="true" Items="@drillStringList" SelectedItemsChanged="@SelectedItemsChanged"
+                                 SortMode="SortMode.Multiple" Filterable="true" QuickFilter="@_drillStringFilter" RowClick="@RowClicked"
+                                 Hideable="false" ReadOnly="false" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual">
+                        <ToolBarContent>
+                            <MudText Typo="Typo.h6">Drill String</MudText>
+                            <MudSpacer />
+                            <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+                                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                        </ToolBarContent>
+                        <Columns>
+                            <SelectColumn T="DrillString" />
+                            <PropertyColumn Property="x => x.Name" Title="Name" Sortable="true" Filterable="true" />
+                            <PropertyColumn Property="x => x.Description" Title="Description" Sortable="true" Filterable="false" />
+                            <PropertyColumn Property="x => (wellBoreDicts == null || x.WellBoreID == null || x.WellBoreID == Guid.Empty || !wellBoreDicts.ContainsKey(x.WellBoreID.Value) || wellBoreDicts[x.WellBoreID.Value] == null) ? string.Empty : wellBoreDicts[x.WellBoreID.Value].Name"
+                                            Title="Wellbore" Sortable="true" Filterable="false" />
+                            <TemplateColumn CellClass="d-flex justify-end" Sortable="false" Filterable="false">
+                                <CellTemplate>
+                                    <MudIconButton Size="@Size.Medium" Icon="@Icons.Material.Outlined.ContentCopy" OnClick="(() => CloneDrillString(context.Item.MetaInfo.ID))" />
+                                    <MudIconButton Size="@Size.Medium" Icon="@Icons.Material.Outlined.Delete" OnClick="(() => DeleteDrillString(context.Item.MetaInfo.ID))" />
+                                </CellTemplate>
+                            </TemplateColumn>
+                        </Columns>
+                        <PagerContent>
+                            <MudDataGridPager T="DrillString" />
+                        </PagerContent>
+                    </MudDataGrid>
+                    <MudGrid Class="my-2">
+                        <MudItem xs="3">
+                            <MudButton OnClick="@OpenAddPanel" IconColor="Color.Success" StartIcon="@Icons.Material.Filled.Add">New drill string </MudButton>
+                        </MudItem>
+                        <MudItem xs="3">
+                            <MudButton OnClick="@DeleteSelectedDrillString" IconColor="Color.Error" StartIcon="@Icons.Material.Filled.Delete">Delete selected drill strings </MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </MudStack>
+            </MudPaper>
+        }
+        @if (displayAddPanel)
+        {
+            <DrillStringAddPanel DrillString="@currentDrillString"
+                                 Fields="@fieldDicts"
+                                 Clusters="@clusterDicts"
+                                 Wells="@wellDicts"
+                                 WellBores="@wellBoreDicts"
+                                 OnUpdate="@ShowMainPanel" />
+        }
+        @if (displayEditPanel)
+        {
+            <DrillStringEditPanel DrillString="@currentDrillString"
+                                  Fields="@fieldDicts"
+                                  Clusters="@clusterDicts"
+                                  Wells="@wellDicts"
+                                  WellBores="@wellBoreDicts"
+                                  OnUpdate="@ShowMainPanel" />
+        }
+    }
+</MudUnitAndReferenceChoiceTag>
+
+@code {
+    // DrillString related variables
+    private List<DrillString> drillStringList = new();
+    private List<DrillString> selectedDrillStringList = new();
+    private DrillString? currentDrillString = null;
+
+    // Create dictionaries to collect the Guid and Name of auxiliary fields
+    private Dictionary<Guid, Field> fieldDicts = new();
+    private Dictionary<Guid, Cluster> clusterDicts = new();
+    private Dictionary<Guid, Well> wellDicts = new();
+    private Dictionary<Guid, WellBore> wellBoreDicts = new();
+
+    private List<DrillStringComponent> selectedDrillStringComponentList = new();
+    [Inject] private IDialogService DialogService { get; set; }
+
+    private GetDigiWellClassClient getWellBoreIdClient = new GetDigiWellClassClient(TypeSelect.WellBore);
+    private Guid wellboreID;
+    private Dictionary<Guid, string> wellboreIdToNameDict = new();
+
+    //Component related variables
+    public bool AddComponentPanelOpen = false;
+    // UI related variables
+    public bool displayMainPanel;
+    public bool displayEditPanel;
+    public bool displayAddPanel;
+    private string? _searchString;
+
+    private string? drillStringName;
+    private string? drillStringDescription;
+    // DrillStringComponent related variables
+    private string? sectionName { get; set; }
+
+    private void CloseAddPanelOnClick()
+    {
+        displayAddPanel = false;
+        displayMainPanel = true;
+        displayEditPanel = false;
+    }
+
+
+    private void OnClickOpenComponentPanel()
+    {
+        AddComponentPanelOpen = true;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Show main panel
+            displayMainPanel = true;
+            displayEditPanel = false;
+            displayAddPanel = false;
+            currentDrillString = null;
+            //Get IDs of available wellbores
+            await getWellBoreIdClient.GetAllAsync(wellboreIdToNameDict);
+            // Starting all loading tasks asynchronously
+            //#if (Inheritance)
+            logger.LogInformation("Trying to load list of DrillStringComponent from client: " + APIUtils.HttpClientDrillString);
+            var drillStringComponentTask = APIUtils.ClientDrillString.GetAllDrillStringComponentAsync();
+            //#endif
+            logger.LogInformation("Trying to load list of DrillString from client: " + APIUtils.HostNameDrillString);
+            var drillStringTask = APIUtils.ClientDrillString.GetAllDrillStringAsync();
+
+            List<Task> loadingTaskList = new List<Task> { drillStringTask };
+            //#if (Inheritance)
+            loadingTaskList.Add(drillStringComponentTask);
+            //#endif
+
+            // Awaiting tasks and retrieve results as they become available
+            while (loadingTaskList.Count > 0)
+            {
+                Task finishedTask = await Task.WhenAny(loadingTaskList);
+                if (finishedTask == drillStringTask)
+                {
+                    try
+                    {
+                        drillStringList = (List<DrillString>)await drillStringTask; // awaiting the finished task allows to retrieve its result and throw exception if needed
+                        if (drillStringList != null)
+                        {
+                            drillStringList.Sort((t1, t2) => t1.Name.CompareTo(t2.Name));
+                        }
+                        else
+                        {
+                            logger.LogWarning("Returned list of DrillString were null on initialization");
+                            Snackbar.Add("Returned list of DrillString were null on initialization", Severity.Warning);
+                        }
+                    }
+                    catch (ApiException ex)
+                    {
+                        logger.LogError(ex, "Impossible to load DrillString from client");
+                    }
+                }
+
+                loadingTaskList.Remove(finishedTask);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Problem DrillString initialization");
+        }
+        logger.LogInformation("Trying to load microservices through client: " + APIUtils.HttpClientField);
+        try
+        {
+            // get guid and name from external microservices
+            ICollection<Field> fields = await APIUtils.ClientField.GetAllFieldAsync();
+            foreach (Field field in fields)
+            {
+                if (!fieldDicts.ContainsKey(field.MetaInfo.ID))
+                {
+                    fieldDicts.Add(field.MetaInfo.ID, field);
+                }
+            }
+            ICollection<Cluster> clusters = await APIUtils.ClientCluster.GetAllClusterAsync();
+            foreach (Cluster cluster in clusters)
+            {
+                if (!clusterDicts.ContainsKey(cluster.MetaInfo.ID))
+                {
+                    clusterDicts.Add(cluster.MetaInfo.ID, cluster);
+                }
+            }
+            ICollection<Well> wells = await APIUtils.ClientWell.GetAllWellAsync();
+            foreach (Well well in wells)
+            {
+                if (!wellDicts.ContainsKey(well.MetaInfo.ID))
+                {
+                    wellDicts.Add(well.MetaInfo.ID, well);
+                }
+            }
+            ICollection<WellBore> wellBores = await APIUtils.ClientWellBore.GetAllWellBoreAsync();
+            foreach (WellBore wellBore in wellBores)
+            {
+                if (!wellBoreDicts.ContainsKey(wellBore.MetaInfo.ID))
+                {
+                    wellBoreDicts.Add(wellBore.MetaInfo.ID, wellBore);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Impossible to load microservices");
+        }
+        await InvokeAsync(() => { StateHasChanged(); });
+    }
+    private async Task<bool> ConfirmDeletion()
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+        var dialog = await DialogService.ShowAsync<DialogDeleteTemplate>("DELETE", options);
+        var result = await dialog.Result;
+        StateHasChanged();
+        if (result == null)
+        {
+            return false;
+        }
+        else
+        {
+            return (!result.Canceled);
+        }
+    }
+
+    private async Task RowClicked(DataGridRowClickEventArgs<DrillString> args)
+    {
+        await EditWellBoreArchitecture(args.Item.MetaInfo.ID);
+    }
+
+    private async Task EditWellBoreArchitecture(Guid id)
+    {
+        try
+        {
+            currentDrillString = await APIUtils.ClientDrillString.GetDrillStringByIdAsync(id);
+            if (currentDrillString != null)
+            {
+                displayMainPanel = false;
+                displayAddPanel = false;
+                displayEditPanel = true;
+                await InvokeAsync(() => { StateHasChanged(); });
+            }
+            else
+            {
+                logger.LogWarning("Impossible to load drill-string");
+                Snackbar.Add("Impossible to load drill-string", Severity.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            currentDrillString = null;
+            logger.LogError(ex, "Impossible to load drill-string to be edited");
+        }
+    }
+
+    private async Task DeleteDrillString(Guid id)
+    {
+        try
+        {
+            bool confirmation = await ConfirmDeletion();
+            if (confirmation)
+            {
+                await APIUtils.ClientDrillString.DeleteDrillStringByIdAsync(id);
+                await OnInitializedAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Impossible to delete DrillString");
+        }
+    }
+    private async Task ViewDrillString(Guid id)
+    {
+        Navigation.NavigateTo($"/DrillString/webapp/DrillString/{id}", forceLoad: true);
+    }
+    private async Task CloneDrillString(Guid id)
+    {
+        try
+        {
+            DrillString drillStringToClone = await APIUtils.ClientDrillString.GetDrillStringByIdAsync(id);
+            MetaInfo metaInfo = new() { ID = Guid.NewGuid(), HttpHostName = APIUtils.HostNameDrillString, HttpHostBasePath = APIUtils.HostBasePathDrillString, HttpEndPoint = "DrillString/" };
+            drillStringToClone.MetaInfo = metaInfo;
+            drillStringToClone.Name = "Copy of " + drillStringToClone.Name;
+            await APIUtils.ClientDrillString.PostDrillStringAsync(drillStringToClone);
+            await OnInitializedAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Impossible to clone drill string!");
+        }
+
+    }
+    private async Task DeleteSelectedDrillString()
+    {
+        try
+        {
+            bool confirmation = await ConfirmDeletion();
+            if (confirmation)
+            {
+                foreach (DrillString drillString in selectedDrillStringList)
+                {
+                    await APIUtils.ClientDrillString.DeleteDrillStringByIdAsync(drillString.MetaInfo.ID);
+                }
+                await OnInitializedAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Impossible to delete all DrillString");
+        }
+
+    }
+
+    //Quick filter - filter gobally across multiple columns with the same input
+    private Func<DrillString, bool>
+    _drillStringFilter => x =>
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+        if ($"{x.Name} {x.Description}".Contains(_searchString))
+            return true;
+
+        return false;
+    };
+
+    //Events
+    private void StartedEditingItem(DrillString item)
+    {
+        //Activating Edit event capture with parameter StartedEditingItem="@StartedEditingItem" in MudDataGrid; arguments are specified in OnClick="@context.Actions.StartedEditingItem(...)"
+    }
+
+    private void CancelledEditingItem(DrillString item)
+    {
+        //Activating Cancel event capture with parameter CancelledEditingItem = "@CancelledEditingItem" in MudDataGrid; arguments are specified in OnClick="@context.Actions.CancelledEditingItem(...)"
+    }
+
+    private void CommittedItemChanges(DrillString item)
+    {
+        //Activating Commit event capture with parameter CommittedItemChanges = "@CommittedItemChanges" in MudDataGrid; arguments are specified in OnClick="@context.Actions.CommittedEditingItem(...)"
+    }
+
+    void SelectedItemsChanged(HashSet<DrillString>
+        items)
+    {
+        selectedDrillStringList.Clear();
+        selectedDrillStringList.InsertRange(0, items);
+    }
+
+    private void OpenAddPanel()
+    {
+        currentDrillString = new DrillString();
+        displayMainPanel = false;
+        displayAddPanel = true;
+        displayEditPanel = false;
+    }
+    private async void ShowMainPanel()
+    {
+        displayMainPanel = true;
+        displayEditPanel = false;
+        displayAddPanel = false;
+        await OnInitializedAsync();
+    }
+}

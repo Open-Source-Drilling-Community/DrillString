@@ -1,0 +1,7 @@
+*.svg
+**/bin/**
+**/obj/**
+**/home/**
+**/.vs/**
+**/PopulateSqlTables/**
+global.json

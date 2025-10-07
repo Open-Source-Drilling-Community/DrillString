@@ -1,0 +1,213 @@
+﻿
+@page "/"
+<MudContainer Class="mx-6 px-n4">
+    <MudText Typo="Typo.h3" Class="my-4 px-n4">Home</MudText>        
+        <MudDivider/>
+        <br>
+        <MudText Typo="Typo.body1" Align="Align.Justify">
+            This microservice is designed to aid in the creation of drill strings. It is divided into 2 main editors: <b>Drill string components</b> 
+        and <b>Drill string</b>. On the first editor, drill-string elements can be created and stored in the database. Each of these components are 
+        defined as a sequence of <b>parts</b> which can be set in accordance to the user's needs. On the second editor, these components can be joined together to form a drill string.
+        </MudText>
+        <br>
+        <MudText Typo="Typo.h6">Drill String Component Editor</MudText>
+        <MudDivider Class="my-2" />
+        <br>
+        <MudText Typo="Typo.body1" Align="Align.Justify">
+        Drill string components are formed by one or more <b> drill string parts</b>. 
+        For instance, a drill pipe could be divided into three parts: (i) the tool-joint pin, (ii) the pipe and (iii) the tool joint box. 
+        A single part carries information of several properties, such outer diameter, inner diameter and length. 
+        A complete list of possible properties can be found in the <b>table below</b>.  
+        <b>OD</b>, <b>ID</b> and <b>Length</b> are the only compulsory inputs. Material properties, 
+        such as elastic modulus and density are pre-filled as steel. However, they can be overwritten as required. 
+        Other geometrical properties are calculated from available data, e.g.: as mass and second moment of area. 
+        Those can also be edited whenever pertinent. The number of parts required for a component is up to the user. If the setup does not require a high level of detail, the drill pipes can be simply defined as a single part containing only the pipes for example.    
+        </MudText>
+        <MudStack Spacing="2" Class="my-4">
+            <MudButton Class="shades-text text-white"
+                Variant="Variant.Filled"
+                Style="@($"background:{HideColors(_expanded)};")"
+                OnClick="OnExpandCollapseClick">@(_expanded ? "Hide part properties table" : "Show part properties table")        
+            </MudButton>
+            <MudCollapse Expanded="_expanded">
+                <MudTable Class="my-4" T="@partProperties" Items="@geometricPropertiesList.Take(geometricPropertiesList.Count)" Hover="true">
+                    <HeaderContent>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Description</MudTh>
+                        <MudTh>Required</MudTh>    
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Name">@context.PropertyName</MudTd>
+                        <MudTd DataLabel="Description">@context.Description</MudTd>
+                        <MudTd DataLabel="Required">@context.Required</MudTd>        
+                    </RowTemplate>
+                </MudTable>
+                <MudStack Spacing="2" Class="my-4">
+                    <MudButton Class="shades-text text-white"
+                        Variant="Variant.Filled"
+                        Style="@($"background:{HideColors(_expanded)};")"
+                        OnClick="OnExpandCollapseClick">@(_expanded ? "Hide part properties table" : "Show part properties table")        
+                    </MudButton>
+              </MudStack>           
+            </MudCollapse>
+        </MudStack>
+        <MudText Typo="Typo.body1" Align="Align.Justify"  Class="my-4">
+        <br><p>
+        The components are divided into different types: <b>DrillPipes</b>, <b>DrillCollars</b>, <b>HeavyWeightDrillPipes</b>, <b>Jar</b>, <b>Mwd</b>, <b>Stabilizer</b> and <b>SteerableRotaryTool</b>. 
+        Whereas the inputs do not change with the type of component, those are useful for the filtering and the post-processing of the drill string afterwards.  
+        A new component can be included by clicking in “Add component”. This redirects the user to the editor section of the page where, as default, a <b>DrillPipe</b> type component with three parts is selected. 
+        The number of parts can be added or removed by changing the value of “# Parts” box. An example video of the process is shown below. 
+        Note that if one of the compulsory inputs in a part is set to zero (either <b>OD</b>, <b>ID</b> or <b>Length</b>), the part will not be added to 
+        the component. 
+        </p>
+        </MudText>
+        <MudStack Spacing="2" Class="my-4">
+            <MudButton Class="shades-text text-white"
+                Variant="Variant.Filled"
+                Style="@($"background:{HideColors(_expandComponentTutorial)};")"
+                OnClick="OnExpandCollapseClickCompTutorial">@(_expandComponentTutorial ? "Hide tutorial for drill string component creation" : "Show tutorial for drill string component creation")        
+            </MudButton>
+            <MudCollapse Expanded="_expandComponentTutorial">                
+                <center>
+                    <video width="960" height="540" autoplay loop muted>
+                        <source src="Others/componentTutorial_v3.webm" type="video/webm">
+                        Your browser does not support the video tag.
+                    </video>
+                </center>
+            </MudCollapse>
+        </MudStack>
+
+        <br>
+        <MudText Typo="Typo.h6">Drill String Editor</MudText>
+        <MudDivider Class="my-2" />
+        <br>
+        <MudText Typo="Typo.body1" Align="Align.Justify"> 
+        <br><p>
+        The drill string editor follows a similar fashion. 
+        In this case, however, a drill string is composed by sections. 
+        Each section comprises at least one component and can be repeated several times. 
+        For example, if one section is composed by 575 drill pipes, than a section can be created with a single <b>DrillPipe</b> 
+        component and the number of repetitions can be set to 575. 
+        If there is a change in drill pipe specification, 
+        than it could be broken into 2 sections, each with their own <b>DrillPipe</b> component.
+        </p>
+        <br><p>
+        At the same time, if a section is composed by 10 jars alternating with 10 heavy weight drill pipes, 
+        than a single section can be created using a <b>Jar</b> component and 
+        a <b>HeavyWeightDrillPipe</b>  component and setting the repetition to 10. 
+        A tutorial video showing this example is shown below.
+        </p>
+        </MudText>
+        <MudStack Spacing="2" Class="my-4">
+            <MudButton Class="shades-text text-white"
+                Variant="Variant.Filled"
+                Style="@($"background:{HideColors(_expandDrillStringTutorial)};")"
+                OnClick="OnExpandCollapseClickDSTutorial">@(_expandDrillStringTutorial ? "Hide tutorial for drill string creation" : "Show tutorial for drill string creation")        
+            </MudButton>
+            <MudCollapse Expanded="_expandDrillStringTutorial">
+                <center>
+                    <video width="960" height="540" autoplay loop muted>
+                        <source src="Others/drillstringTutorial_v3.webm" type="video/webm">
+                        Your browser does not support the video tag.
+                    </video>
+                </center>
+            </MudCollapse>
+        </MudStack>
+
+        <MudText Typo="Typo.body1" Align="Align.Justify"> 
+        <p>
+        A drill-string can be fully edited. In this example, a drill-string is copied and then the first drill pipe section is updated with another drill pipe.  
+        </p>
+        </MudText>
+        <MudStack Spacing="2" Class="my-4">
+            <MudButton Class="shades-text text-white"
+                Variant="Variant.Filled"
+                Style="@($"background:{HideColors(_expandDrillStringEditTutorial)};")"
+                OnClick="OnExpandCollapseClickEditDSTutorial">@(_expandDrillStringEditTutorial ? "Hide tutorial for drill string edition" : "Show tutorial for drill string edition")        
+            </MudButton>
+            <MudCollapse Expanded="_expandDrillStringEditTutorial">
+                <center>
+                    <video width="960" height="540" autoplay loop muted>
+                        <source src="Others/drillstringEditTutorial_v3.webm" type="video/webm">
+                        Your browser does not support the video tag.
+                    </video>
+                </center>
+            </MudCollapse>
+        </MudStack>
+        <p>
+        In this editor, it is not possible to edit component parts. This must be achieved either by the <b>Drill string components</b> page or by creating a new component. At the top right section of the page, the user is allowed to create a new component. After changes have been made, the user can choose to either overwrite the drill string or to save in a separate instance. 
+        </p>
+
+
+</MudContainer>
+@code {
+    private class partProperties()
+    {
+        public string PropertyName = "";
+        public string Description = "";   
+        public string Required = "";            
+    }
+    bool _expanded = false;
+    bool _expandComponentTutorial = true;
+    bool _expandDrillStringTutorial = true;
+    bool _expandDrillStringEditTutorial = true;
+    
+    //Used as aid to signalize if collapsables are open or not
+    private string HideColors(bool expandBool)
+    {
+        if (expandBool)
+        {
+            return Colors.Indigo.Lighten1;
+        }
+        else
+        {
+            return Colors.Indigo.Darken4;            
+        }
+    }
+    private void OnExpandCollapseClick() {
+        _expanded = !_expanded;
+    }
+    private void OnExpandCollapseClickCompTutorial() {
+        _expandComponentTutorial = !_expandComponentTutorial;
+    }
+    private void OnExpandCollapseClickDSTutorial() {
+        _expandDrillStringTutorial = !_expandDrillStringTutorial;
+    }
+    private void OnExpandCollapseClickEditDSTutorial() {
+        _expandDrillStringEditTutorial = !_expandDrillStringEditTutorial;
+    }
+    List<partProperties> geometricPropertiesList = new List<partProperties>()
+    {
+        new partProperties() {PropertyName = "Name", Description = "Part name (e.g.: tool joint)", Required = "No"},
+        new partProperties() {PropertyName = "OD", Description = "Outer diameter", Required = "Yes"},
+        new partProperties() {PropertyName = "ID", Description = "Inner diameter", Required = "Yes"},               
+        new partProperties() {PropertyName = "Length", Description = "Length of the part", Required = "Yes"},                
+        new partProperties() {PropertyName = "OD2", Description = "Second outer diameter when necessary (e.g.: reamer and sleeves)", Required = "No"},
+        new partProperties() {PropertyName = "Unbalance distance", Description = "Distance modulus the unbalance from center", Required = "No"},
+        new partProperties() {PropertyName = "Unbalance angle", Description = "Angle between the center of mass and geometric center", Required = "No"},
+        new partProperties() {PropertyName = "Coating thickness", Description = "Thickness of inner coating", Required = "No"},
+        new partProperties() {PropertyName = "Coating density", Description = "Density of inner coating", Required = "No"},
+        new partProperties() {PropertyName = "Coating thermal conductivity", Description = "Thermal conductivity of inner coating", Required = "No"},
+        new partProperties() {PropertyName = "Coating heat capacity", Description = "Heat capacity of inner coating", Required = "No"},
+        new partProperties() {PropertyName = "Rotational friction", Description = "Friction coefficient on rotational degree of freedom", Required = "No"},
+        new partProperties() {PropertyName = "Axial friction", Description = "Friction coefficient on axial degree of freedom", Required = "No"},
+        new partProperties() {PropertyName = "Second Moment of Area", Description = "Area inertia. If empty, it is calculated automatically", Required = "Auto-fill"},
+        new partProperties() {PropertyName = "Second Moment of Area of State 2", Description = "Area inertia when OD2 is required", Required = "No"},
+        new partProperties() {PropertyName = "Yield stress", Description = "yield stress", Required = "No"},
+        new partProperties() {PropertyName = "Ultimate stress", Description = "ultimate stress", Required = "No"},
+        new partProperties() {PropertyName = "Young's modulus", Description = "Defaults to steel", Required = "Autofill"},
+        new partProperties() {PropertyName = "Poisson's ratio", Description = "Defaults to steel", Required = "Autofill"},
+        new partProperties() {PropertyName = "Density", Description = "Defaults to steel", Required = "Autofill"},
+        new partProperties() {PropertyName = "Average Part Density", Description = "Used in case of non-uniform parts. Defaults to steel", Required = "Autofill"},
+        new partProperties() {PropertyName = "Mass", Description = "If empty, calculates from previous properties", Required = "Autofill"},
+        new partProperties() {PropertyName = "Heat capacity", Description = "Defaults to steel", Required = "Autofill"},
+        new partProperties() {PropertyName = "Thermal condutivity", Description = "Defaults to steel", Required = "Autofill"},
+        new partProperties() {PropertyName = "Pressure loss coefficient at low flowrate", Description = "", Required = "No"},
+        new partProperties() {PropertyName = "Pressure loss coefficient at high flowrate", Description = "", Required = "No"},
+        new partProperties() {PropertyName = "Total flow area", Description = "Inner area availabel for the flow", Required = "No"},
+        new partProperties() {PropertyName = "Flow rate threshold", Description = "Triggers changes from low/high flow rate", Required = "No"},    
+    };
+
+
+
+}

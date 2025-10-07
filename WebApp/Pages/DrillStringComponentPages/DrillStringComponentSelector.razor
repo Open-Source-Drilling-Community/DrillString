@@ -1,0 +1,70 @@
+@implements IUnitAwareComponent
+@inject ILogger<MudInputWithUnitAdornment> logger
+
+<MudItem xs="11" Class="ml-n4">                
+    <MudSelect T="DrillStringComponent" Value="selectedComponent" Label="@($"Name | Type | Parts OD/ID [{DiameterUnits()}]")" Dense="true" Class="ml-4" ValueChanged="updateSection" >
+        @foreach (DrillStringComponent component in drillStringComponents)
+        {
+            <MudSelectItem Value="@component">
+                <!-- For each option, add the name and more complimentary text -->
+                <MudGrid>
+                    <MudItem xs="3">                          
+                        <MudText Typo="Typo.body2"><b>@component.Name</b></MudText>                                                
+                    </MudItem>
+                    <MudItem xs="2">  
+                        <MudText Style="@($"color:{Colors.Gray.Darken1};")" Typo="Typo.body2">@component.Type</MudText>                                                
+                    </MudItem>
+                    @foreach(DrillStringComponentPart part in component.PartList)
+                    {
+                        <MudItem xs="2">  
+                            <MudText Style="@($"color:{Colors.Gray.Darken1};")" Typo="Typo.body2">OD [@DiameterUnits()]: @ManageDiameter(part.OuterDiameter)</MudText>                                                     
+                            <MudText Style="@($"color:{Colors.Gray.Darken1};")" Typo="Typo.body2">ID [@DiameterUnits()]: @ManageDiameter(part.InnerDiameter)</MudText>                                                                             
+                        </MudItem>
+                    }
+                </MudGrid>                           
+            </MudSelectItem>
+        }        
+    </MudSelect>                              
+</MudItem>
+
+@code{
+    [CascadingParameter]
+    private MudUnitAndReferenceChoiceTag? Parent { get; set; }
+    [Parameter]
+    public int componentNumber {get; set;}
+    [Parameter]
+    public List<DrillStringComponent>? drillStringComponents {get; set;}
+    [Parameter]
+    public DrillStringSection? drillStringSection {get; set;}
+    [Parameter]
+    public List<DrillStringComponent> selectedDrillStringComponents {get; set;}
+    [Parameter]
+    public int indexComponent {get; set;}
+    private DrillStringComponent? selectedComponent {get; set;}
+
+    public void ManageUnits(){}
+    private double RoundDouble(double var)
+    {
+        int intVar = (int) (var*100);
+        return ((double) intVar)/100;
+    }
+    public double ManageDiameter(double Diameter)
+    {
+        return RoundDouble(Parent.FromSI(Diameter, "DiameterPipeDrilling"));
+    }
+
+    private string DiameterUnits()
+    {
+        return Parent.GetUnitLabel("DiameterPipeDrilling");        
+    }
+    private void updateSection(DrillStringComponent? dsComponent)
+    {
+        //If it is empty, add a value
+        if (dsComponent != null)
+        {            
+            selectedDrillStringComponents[indexComponent] = dsComponent;            
+            drillStringSection.SectionComponentList = selectedDrillStringComponents;
+            selectedComponent = dsComponent;
+        }
+    }
+}

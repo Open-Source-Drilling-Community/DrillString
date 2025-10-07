@@ -1,0 +1,50 @@
+@implements IUnitAwareComponent
+@inject ILogger<MudInputWithUnitAdornment> logger
+
+@if(Item != null){
+    <MudTable Class="pb-4 mx-4" Items="Item">
+        <HeaderContent>
+            <MudTh>Part name</MudTh>
+            <MudTh>OD [@(DiameterUnits())]</MudTh>
+            <MudTh>ID [@(DiameterUnits())]</MudTh>
+            <MudTh>Length [@(LengthUnits())]</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="OD">@(ManageDiameter(context.OuterDiameter))</MudTd>
+            <MudTd DataLabel="ID">@(ManageDiameter(context.InnerDiameter))</MudTd>
+            <MudTd DataLabel="Length">@(ManageLength(context.TotalLength))</MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+@code{
+    [CascadingParameter]
+    private MudUnitAndReferenceChoiceTag? Parent { get; set; }
+    [Parameter]
+    public List<DrillStringComponentPart>? Item {get; set;}
+    private double RoundForPrint(double val)
+    {
+        return  ((double)((int)(val*1000)))/1000;
+    }
+
+    public void ManageUnits()
+    {
+    }
+    private string DiameterUnits()
+    {
+        return Parent.GetUnitLabel("DiameterPipeDrilling");        
+    }
+    private string LengthUnits()
+    {
+        return Parent.GetUnitLabel("Length");        
+    }
+
+    public double ManageDiameter(double Diameter)
+    {
+        return RoundForPrint(Parent.FromSI(Diameter, "DiameterPipeDrilling"));
+    }
+    public double ManageLength(double Diameter)
+    {
+        return RoundForPrint(Parent.FromSI(Diameter, "Length"));
+    }
+}

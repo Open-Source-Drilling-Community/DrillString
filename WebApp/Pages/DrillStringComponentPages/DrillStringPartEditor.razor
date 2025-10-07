@@ -1,0 +1,413 @@
+<MudContainer>
+    <MudPaper Style="@($"background:{createRowColor()};")" Class="my-1 py-2">
+        <MudContainer>        
+            <MudGrid>  
+                <MudItem xs="12">
+                    <MudTextField 
+                        @bind-Value="ComponentPartsList[index].Name" 
+                        T="string" Variant="Variant.Text" 
+                        Immediate="true" 
+                        Label="Part name (e.g.: Tool joint)">
+                    </MudTextField>                              
+                </MudItem>   
+                <MudItem xs="2" Class ="my-1">
+                    <MudInputWithUnitAdornment VariantType="Variant.Text"
+                           QuantityLabel="OD" QuantityName="DiameterPipeDrilling"
+                           SIValue="@ComponentPartsList[index].OuterDiameter" 
+                           SIValueNullableChanged="@UpdateOuterDiameterUnits" />
+                </MudItem>
+                <MudItem xs="2" Class ="my-1">
+                    <MudInputWithUnitAdornment VariantType="Variant.Text"
+                           QuantityLabel="ID" QuantityName="DiameterPipeDrilling"
+                           SIValue="@ComponentPartsList[index].InnerDiameter" 
+                           SIValueNullableChanged="@UpdateInnerDiameterUnits" />
+                </MudItem>
+                <MudItem xs="2" Class ="my-1">
+                    <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                               QuantityLabel="Length" QuantityName="LengthStandard"
+                                               SIValue="@ComponentPartsList[index].TotalLength" 
+                                               SIValueNullableChanged="@UpdateTotalLengthUnits" />
+                </MudItem>
+                @if(AdvancedComponentEditionTrue)
+                {
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                           QuantityLabel="OD second state" QuantityName="DiameterPipeDrilling"
+                           SIValueNullable="@ComponentPartsList[index].OuterDiameterState2" 
+                           SIValueNullableChanged="@UpdateScndOuterDiameterUnits" />                                                                                                               
+                    </MudItem> 
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                                   QuantityLabel="Unbalance dist." QuantityName="LengthSmall"
+                                                   SIValueNullable="@ComponentPartsList[index].EccentricityDistance" 
+                                                   SIValueNullableChanged="@UpdateUnbalanceDistanceUnits" />                                                                                                                      
+                    </MudItem>                 
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                                   QuantityLabel="Unbalance angle" QuantityName="PlaneAngleDrilling"
+                                                   SIValueNullable="@ComponentPartsList[index].EccentricityAngle" 
+                                                   SIValueNullableChanged="@UpdateUnbalanceAngleUnits" />                                                                                                                                                                                                                          
+                    </MudItem> 
+                    <!-- coating properties -->
+                    <MudItem xs="2" Class ="my-1">              
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                               QuantityLabel="Coating thick." QuantityName="LengthSmall"
+                               SIValueNullable="@ComponentPartsList[index].InnerCoatingThickness" 
+                               SIValueNullableChanged="@UpdateCoatingThicknessUnits" />                                                                                                            
+                    </MudItem> 
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                               QuantityLabel="Coating density" QuantityName="MassDensityDrilling"
+                               SIValueNullable="@ComponentPartsList[index].InnerCoatingDensity" 
+                               SIValueNullableChanged="@UpdateCoatingDensityUnits" />                                                                                                      
+                    </MudItem>                
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                                   QuantityLabel="Coat. therm. cond." QuantityName="ThermalConductivityDrilling"
+                                                   SIValueNullable="@ComponentPartsList[index].InnerCoatingThermalCondutivity" 
+                                                   SIValueNullableChanged="@UpdateCoatingThermalConductivityUnits" />                                                                                                                    
+                    </MudItem> 
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                                   QuantityLabel="Coat. heat cap." QuantityName="IsobaricSpecificHeatCapacityDrilling"
+                               SIValueNullable="@ComponentPartsList[index].InnerCoatingHeatCapacity" 
+                               SIValueNullableChanged="@UpdateCoatingHeatCapacityUnits" />                                                                                                                                                                                                                                       
+                    </MudItem> 
+                    <!-- Mechanical properties -->
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                                   QuantityLabel="Rotational friction" QuantityName="DimensionLessStandard"
+                                                   SIValueNullable="@ComponentPartsList[index].FrictionFactorRotation"
+                                                   SIValueNullableChanged="@UpdateRotationFrictionUnits" />                                                                                                        
+                    </MudItem> 
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                                   QuantityLabel="Axial friction" QuantityName="DimensionLessStandard"
+                                                   SIValueNullable="@ComponentPartsList[index].FrictionFactorAxialDisplacement"
+                                                   SIValueNullableChanged="@UpdateAxialFrictionUnits" />                                                                                                         
+                    </MudItem> 
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                                   QuantityLabel="Mom. of in. of main state" QuantityName="MomentOfAreaDrilling"
+                                                   SIValueNullable="@ComponentPartsList[index].FirstCrossSectionTorsionalInertia"
+                                                   SIValueNullableChanged="@UpdateFirstInertiaOfArea" />                                                                                                         
+                    </MudItem> 
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                                   QuantityLabel="Mom. of in. of 2nd state" QuantityName="MomentOfAreaDrilling"
+                                                   SIValueNullable="@ComponentPartsList[index].SecondCrossSectionTorsionalInertia"
+                                                   SIValueNullableChanged="@UpdateSecondInertiaOfArea" />                                                                                                         
+                    </MudItem> 
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                                   QuantityLabel="Yield stress" QuantityName="DrillStemMaterialStrengthDrilling"
+                                                   SIValueNullable="@ComponentPartsList[index].YieldStrength" 
+                                                   SIValueNullableChanged="@UpdateYieldStrengthUnits" />                                                                                                     
+                    </MudItem>
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                                   QuantityLabel="Ult. stress" QuantityName="DrillStemMaterialStrengthDrilling"
+                                                   SIValueNullable="@ComponentPartsList[index].UltimateStrength" 
+                                                   SIValueNullableChanged="@UpdateUltimateStrengthUnits" />                                                                                                           
+                    </MudItem> 
+
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                                   QuantityLabel="Young's Modulus" QuantityName="ElasticModulus"
+                                                   SIValue="@ComponentPartsList[index].YoungModulus" 
+                                                   SIValueNullableChanged="@UpdateYoungsModulusUnits" />                                                                                                                
+                    </MudItem>
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                                   QuantityLabel="Poisson's Ratio" QuantityName="DimensionLessStandard"
+                                                   SIValue="@ComponentPartsList[index].PoissonRatio"
+                                                   SIValueNullableChanged="@UpdatePoissonRatioUnits" />                                                                                                        
+                    </MudItem> 
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                                   QuantityLabel="Density " QuantityName="MassDensityDrilling"
+                                                   SIValue="@ComponentPartsList[index].MaterialDensity" 
+                                                   SIValueNullableChanged="@UpdateMaterialDensityUnits"/>                                                                                                                
+                    </MudItem>
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                                   QuantityLabel="Avg part density " QuantityName="MassDensityDrilling"
+                                                   SIValue="@ComponentPartsList[index].AveragePartDensity" 
+                                                   SIValueNullableChanged="@UpdateAveragePartDensityUnits" />                                                                                                                
+                    </MudItem>
+                    
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                                   QuantityLabel="Mass" QuantityName="MassDrilling"
+                                                   SIValue="@ComponentPartsList[index].Mass" 
+                                                   SIValueNullableChanged="@UpdateMassUnits" />                                                                                                                
+                    </MudItem>                    
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                                   QuantityLabel="Heat capacity " QuantityName="IsobaricSpecificHeatCapacityDrilling"
+                            SIValue="@ComponentPartsList[index].HeatCapacity" 
+                            SIValueNullableChanged="@UpdateHeatCapacityUnits" />                                                                                                                
+                    </MudItem>
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                                   QuantityLabel="Therm. cond. " QuantityName="ThermalConductivityDrilling"
+                            SIValue="@ComponentPartsList[index].ThermalCondutivity" 
+                            SIValueNullableChanged="@UpdateThermalCondutivityUnits" />                                                                                                                
+                    </MudItem>
+                    <!-- Hydraulic properties -->
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                                   QuantityLabel="Press. loss const. at low flow " QuantityName="PressureLossConstantDrilling"
+                                                   SIValueNullable="@ComponentPartsList[index].PressureLossConstantLowFlowRate"
+                                                   SIValueNullableChanged="@UpdatePressureLossConstantLowFlowRateUnits" />                                                                                                        
+                    </MudItem> 
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                                   QuantityLabel="Press. loss const. at high flow " QuantityName="PressureLossConstantDrilling"
+                                                   SIValueNullable="@ComponentPartsList[index].PressureLossConstantHighFlowRate"
+                                                   SIValueNullableChanged="@UpdatePressureLossConstantHighFlowRateUnits" />                                                                                                       
+                    </MudItem>                           
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                                   QuantityLabel="TFA main state" QuantityName="TotalFlowAreaDrilling"
+                                                   SIValueNullable="@ComponentPartsList[index].TotalFlowAreaCondition1" 
+                                                   SIValueNullableChanged="@UpdateTotalFlowArea1Units" />                                                                                                          
+                    </MudItem> 
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                                   QuantityLabel="TFA 2nd state" QuantityName="TotalFlowAreaDrilling"
+                                                   SIValueNullable="@ComponentPartsList[index].TotalFlowAreaCondition2" 
+                                                   SIValueNullableChanged="@UpdateTotalFlowArea2Units" />                                                                                                                 
+                    </MudItem> 
+                    <MudItem xs="2" Class ="my-1">
+                        <MudInputWithUnitAdornment VariantType="Variant.Text"
+                                                   QuantityLabel="Flow thresh." QuantityName="VolumetricFlowrateDrilling"
+                                                   SIValueNullable="@ComponentPartsList[index].FlowrateThresholdValue" 
+                                                   SIValueNullableChanged="@UpdateCriticalFlowRateUnits" />                                                                                                              
+                    </MudItem>            
+                }    
+            </MudGrid>
+        </MudContainer>
+    </MudPaper>
+</MudContainer>
+@code {
+    [Parameter]
+    public List<DrillStringComponentPart> ComponentPartsList {get; set;}
+    [Parameter]
+    public int index {get; set;}
+    [Parameter]
+    public bool AdvancedComponentEditionTrue {get; set;}
+
+    private string createRowColor()
+    {
+        if (2*(index/2) - index  == 0)
+        {
+            return Colors.Gray.Lighten5;   
+        }
+        else
+        {
+            return Colors.Gray.Lighten3;
+        }
+    }
+    public void ManageUnits(){}
+    private string suggestedMass()
+    {
+        double calcMass = 0.25 * 3.14159265359 * (
+            ComponentPartsList[index].OuterDiameter * ComponentPartsList[index].OuterDiameter - 
+            ComponentPartsList[index].InnerDiameter * ComponentPartsList[index].InnerDiameter) * 
+            ComponentPartsList[index].TotalLength * ComponentPartsList[index].AveragePartDensity;
+        return $"Mass (e.g.: {calcMass})"; 
+    }
+    private string suggestedInertia()
+    {
+        double calcInertia = calculateCrossSectionTorsionalInertia(ComponentPartsList[index].InnerDiameter, ComponentPartsList[index].OuterDiameter);           
+        return $"Inertia (e.g.: {calcInertia})"; 
+    }
+    private void updateMassValue()
+    {
+        ComponentPartsList[index].Mass = 0.25 * 3.14159265359 * (
+            ComponentPartsList[index].OuterDiameter * ComponentPartsList[index].OuterDiameter - 
+            ComponentPartsList[index].InnerDiameter * ComponentPartsList[index].InnerDiameter) * 
+            ComponentPartsList[index].TotalLength * ComponentPartsList[index].AveragePartDensity;
+    }
+    
+    private double calculateCrossSectionArea(double Di, double Do)
+    {
+        return 3.14159265359 * 0.25 * (Do*Do - Di*Di);
+    }    
+    private double calculateCrossSectionTorsionalInertia(double Di, double Do)
+    {
+        return 0.125 * (Do*Do + Di*Di) * calculateCrossSectionArea(Di, Do);
+    } 
+
+    private void UpdateOuterDiameterUnits(double? val)
+    {
+        if (val != null)
+        {
+            //Update class value
+            ComponentPartsList[index].OuterDiameter = (double)val;
+            //Update inertia of areas value
+            ComponentPartsList[index].FirstCrossSectionTorsionalInertia = calculateCrossSectionTorsionalInertia(ComponentPartsList[index].InnerDiameter, (double)val);          
+            updateMassValue();
+        }
+    }
+    private void UpdateInnerDiameterUnits(double? val)
+    {
+        if (val != null)
+        {
+            ComponentPartsList[index].InnerDiameter = (double)val;    
+            //Update inertia of areas value
+            ComponentPartsList[index].FirstCrossSectionTorsionalInertia = calculateCrossSectionTorsionalInertia((double)val, ComponentPartsList[index].OuterDiameter);                  
+            updateMassValue();
+        }
+    }
+
+    private void UpdateTotalLengthUnits(double? val)
+    {
+        if (val != null){
+            ComponentPartsList[index].TotalLength = (double)val;
+            updateMassValue();     
+        }
+    }
+    
+    private void UpdateScndOuterDiameterUnits(double? val)
+    {
+        if (val != null)
+            ComponentPartsList[index].OuterDiameterState2 = (double)val;
+    }
+    private void UpdateUnbalanceDistanceUnits(double? val)
+    {
+        if (val != null)
+            ComponentPartsList[index].EccentricityDistance = (double)val;
+    }
+    private void UpdateUnbalanceAngleUnits(double? val)
+    {
+        if (val != null)
+            ComponentPartsList[index].EccentricityAngle = (double)val;
+    }
+    private void UpdateCoatingThicknessUnits(double? val)
+    {
+        if (val != null)
+            ComponentPartsList[index].InnerCoatingThickness = (double)val;
+    }
+    private void UpdateCoatingDensityUnits(double? val)
+    {
+        if (val != null)
+            ComponentPartsList[index].InnerCoatingDensity = (double)val;
+    }
+    private void UpdateCoatingThermalConductivityUnits(double? val)
+    {
+        if (val != null)
+            ComponentPartsList[index].InnerCoatingThermalCondutivity = (double)val;
+    }
+    private void UpdateCoatingHeatCapacityUnits(double? val)
+    {
+        if (val != null)
+            ComponentPartsList[index].InnerCoatingHeatCapacity = (double)val;
+    }
+    private void UpdateRotationFrictionUnits(double? val)
+    {
+        if (val != null)
+            ComponentPartsList[index].FrictionFactorRotation = (double)val;
+    }
+    private void UpdateAxialFrictionUnits(double? val)
+    {
+        if (val != null)
+            ComponentPartsList[index].FrictionFactorAxialDisplacement = (double)val;
+    }
+    private void UpdateYieldStrengthUnits(double? val)
+    {
+        if (val != null)
+            ComponentPartsList[index].YieldStrength = (double)val;
+    }
+    private void UpdateUltimateStrengthUnits(double? val)
+    {
+        if (val != null)
+            ComponentPartsList[index].UltimateStrength = (double)val;
+    }
+    private void UpdateYoungsModulusUnits(double? val)
+    {
+        if (val != null)
+            ComponentPartsList[index].YoungModulus = (double)val;
+    }
+    private void UpdatePoissonRatioUnits(double? val)
+    {
+        if (val != null)
+            ComponentPartsList[index].PoissonRatio = (double)val;
+    }
+    private void UpdateMaterialDensityUnits(double? val)
+    {
+        if (val != null)
+            ComponentPartsList[index].MaterialDensity = (double)val;
+    }
+    private void UpdateAveragePartDensityUnits(double? val)
+    {
+        if (val != null){
+            ComponentPartsList[index].AveragePartDensity = (double)val;
+            updateMassValue();
+        }
+    }
+    private void UpdateMassUnits(double? val)
+    {
+        if (val != null)
+        {
+            suggestedMass();
+            ComponentPartsList[index].Mass = (double) val;
+        }
+    }
+    private void UpdateHeatCapacityUnits(double? val)
+    {
+        if (val != null)
+            ComponentPartsList[index].HeatCapacity = (double)val;
+    }
+    private void UpdateThermalCondutivityUnits(double? val)
+    {
+        if (val != null)
+            ComponentPartsList[index].ThermalCondutivity = (double)val;
+    }
+    private void UpdateTotalFlowArea1Units(double? val)
+    {
+        if (val != null)
+            ComponentPartsList[index].TotalFlowAreaCondition1 = (double)val;
+    }
+    private void UpdateTotalFlowArea2Units(double? val)
+    {
+        if (val != null)
+            ComponentPartsList[index].TotalFlowAreaCondition2 = (double)val;
+    }
+   private void UpdateCriticalFlowRateUnits(double? val)
+    {
+        if (val != null)
+            ComponentPartsList[index].FlowrateThresholdValue = (double)val;
+    }
+    private void UpdateFirstInertiaOfArea(double? val)
+    {
+        if (val != null)
+        {
+            suggestedInertia();
+            ComponentPartsList[index].FirstCrossSectionTorsionalInertia = (double)val;
+        }
+    }
+    private void UpdateSecondInertiaOfArea(double? val)
+    {
+        if (val != null)
+        {
+            suggestedInertia();
+            ComponentPartsList[index].SecondCrossSectionTorsionalInertia = (double)val;
+        }
+    }
+    private void UpdatePressureLossConstantLowFlowRateUnits(double? val)
+    {
+        if (val != null)
+        {
+            ComponentPartsList[index].PressureLossConstantLowFlowRate = (double)val;
+        }
+    }
+    private void UpdatePressureLossConstantHighFlowRateUnits(double? val)
+    {
+        if (val != null)
+        {
+            ComponentPartsList[index].PressureLossConstantHighFlowRate = (double)val;
+        }
+    }
+}

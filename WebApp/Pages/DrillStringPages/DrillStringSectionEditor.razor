@@ -1,0 +1,175 @@
+@implements IUnitAwareComponent
+@inject ILogger<MudInputWithUnitAdornment> logger
+@inject ILogger<DrillStringMain> logger
+@inject ISnackbar Snackbar
+@if(drillStringSection != null)
+{    
+    <MudPaper Class="my-4 mx-2">  
+        <MudGrid Class="my-2 mx-2 align-center">
+            <MudItem xs="3">
+                <MudTextField 
+                    @bind-Value="drillStringSection.Name" Label="Section name" T="string" Variant="Variant.Text">
+                </MudTextField>   
+            </MudItem>
+            <MudItem xs="2">
+                <MudNumericField 
+                    HideSpinButtons="false" @bind-Value="drillStringSection.Count" 
+                        Label="Repetitions" T="int" Variant="Variant.Text" Min="1" Max="10000">
+                </MudNumericField>   
+            </MudItem>
+            <MudSpacer/>
+      
+            
+            <MudItem xs="2">
+                <MudButton StartIcon="@Icons.Material.Filled.Add"  IconColor="Color.Tertiary"  OnClick="AddComponent" Size="Size.Small"> Add component </MudButton>        
+            </MudItem>
+            <MudItem xs="3"Class="mx-n4">
+                <MudButton StartIcon="@Icons.Material.Filled.Remove"  IconColor="Color.Secondary"  OnClick="RemoveComponent " Size="Size.Small"> Remove component</MudButton>                                  
+            </MudItem>
+            <MudItem xs="11">
+                @for(int i = 0; i < drillStringSectionComponents.Count; i++)
+                {
+                    compIndex = i;
+                    <MudSelect T="DrillStringComponent" Value="drillStringSectionComponents[compIndex]"
+                        Text="@drillStringSectionComponents[compIndex].Name" Label="@($"Name | Type | Parts OD/ID [{DiameterUnits()}]")" 
+                        Dense="true" ValueChanged="updateSection">
+                        <!-- loop components to add to the select box-->
+                        @foreach (DrillStringComponent component in availableDrillStringComponents)
+                        {
+                            <MudSelectItem Value="@component">
+                                <MudGrid>
+                                    <MudItem xs="3" Class="ml-4">                          
+                                        <MudText Typo="Typo.body2"><b>@component.Name</b></MudText>                                                
+                                    </MudItem>
+                                    <MudItem xs="2" Class="ml-2">  
+                                        <MudText Style="@($"color:{Colors.Gray.Darken1};")" Typo="Typo.body2">@component.Type</MudText>                                                
+                                    </MudItem>
+                                    <!-- Format output-->                    
+                                    @foreach(DrillStringComponentPart part in component.PartList)
+                                    {
+                                        <MudItem xs="2" Class="ml-2">  
+                                            <MudText Style="@($"color:{Colors.Gray.Darken1};")" Typo="Typo.body2">OD [@DiameterUnits()]: @ManageDiameter(part.OuterDiameter)</MudText>                                                     
+                                            <MudText Style="@($"color:{Colors.Gray.Darken1};")" Typo="Typo.body2">ID [@DiameterUnits()]: @ManageDiameter(part.InnerDiameter)</MudText>                                                                             
+                                        </MudItem>
+                                    }
+                                </MudGrid>       
+                            </MudSelectItem>
+                        }
+                    </MudSelect>  
+                    <br/>                 
+                }
+            </MudItem>                     
+        </MudGrid>        
+    </MudPaper>
+}
+
+@code{
+    [CascadingParameter]
+    private MudUnitAndReferenceChoiceTag? Parent { get; set; }
+    [Parameter]
+    public DrillStringSection? drillStringSection {get; set;}
+    private List<DrillStringComponent> availableDrillStringComponents = new();
+    private List<DrillStringComponent> drillStringSectionComponents = new();
+    private DrillStringComponent currentComponent = new();
+    private int compIndex;
+    protected override async Task OnParametersSetAsync()
+    {
+        //Create a list of the components in that section
+        if(drillStringSection != null)
+        {
+            if (drillStringSection.SectionComponentList != null)
+            { 
+                //Empty any old values
+                drillStringSectionComponents = drillStringSection.SectionComponentList.ToList();            
+            }
+        }
+        availableDrillStringComponents.Clear();
+        //Get all available drill string components
+        try
+        {
+            //Clear old lists
+            availableDrillStringComponents.Clear();
+            logger.LogInformation("Trying to load list of DrillStringComponent from client: " + APIUtils.HttpClientDrillString);
+            var drillStringComponentTask = APIUtils.ClientDrillString.GetAllDrillStringComponentAsync();
+            List<Task> loadingTaskList = new List<Task>() { drillStringComponentTask};
+            while (loadingTaskList.Count > 0)
+            {
+                Task finishedTask = await Task.WhenAny(loadingTaskList);
+                if (finishedTask == drillStringComponentTask)
+                {
+                    try
+                    {
+                        // Get all components
+                        availableDrillStringComponents = (List<DrillStringComponent>)await drillStringComponentTask;
+                        if (availableDrillStringComponents != null)
+                        {
+                            availableDrillStringComponents.Sort((f1, f2) => f1.Name.CompareTo(f2.Name));                                                 
+                        }
+                        else
+                        {
+                            logger.LogWarning("Returned list of DrillStringComponent were null");
+                            Snackbar.Add("Returned list of DrillStringComponent were null", Severity.Warning);
+                        }
+                    }
+                    catch (ApiException ex)
+                    {
+                        logger.LogError(ex, "Impossible to load DrillStringComponent from client");
+                    }
+                }
+                await finishedTask;
+                loadingTaskList.Remove(finishedTask);
+            }                
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Impossible to load list of drill string components for drillstring creation");
+        }
+        StateHasChanged();
+    }
+    private void updateSection(DrillStringComponent? dsComponent)
+    {
+        //If it is empty, add a value
+        if (dsComponent != null && drillStringSection != null)
+        {            
+            drillStringSectionComponents[compIndex] = dsComponent;
+            drillStringSection.SectionComponentList = drillStringSectionComponents;
+        }
+    }
+    private void AddComponent()
+    {
+        if (drillStringSectionComponents != null)
+        {
+            if (availableDrillStringComponents != null)
+            {
+                drillStringSectionComponents.Add(availableDrillStringComponents[0]);
+                drillStringSection.SectionComponentList = drillStringSectionComponents;
+            }        
+        }
+    }
+    private void RemoveComponent() 
+    {
+        if (drillStringSectionComponents != null)
+        {
+            if (drillStringSectionComponents.Count > 1)
+            {
+                drillStringSectionComponents.RemoveAt(drillStringSectionComponents.Count - 1);
+                drillStringSection.SectionComponentList = drillStringSectionComponents;
+            }
+        }
+    }
+    public void ManageUnits(){}
+    private double RoundDouble(double var)
+    {
+        int intVar = (int) (var*100);
+        return ((double) intVar)/100;
+    }
+    public double ManageDiameter(double Diameter)
+    {
+        return RoundDouble(Parent.FromSI(Diameter, "DiameterPipeDrilling"));
+    }
+
+    private string DiameterUnits()
+    {
+        return Parent.GetUnitLabel("DiameterPipeDrilling");        
+    }
+}

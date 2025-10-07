@@ -1,0 +1,458 @@
+﻿@page "/DrillStringComponent"
+@inject ILogger<DrillStringComponentMain> logger
+@inject ISnackbar Snackbar
+@implements IUnitAwareComponent
+<MudUnitAndReferenceChoiceTag HttpHost=@APIUtils.HostNameUnitConversion
+                              HttpBasePath=@APIUtils.HostBasePathUnitConversion
+                              HttpController="UnitSystem/"
+                              UnitSystemName="@DataUtils.UnitAndReferenceParameters.UnitSystemName"
+                              UnitSystemNameChanged="@DataUtils.UpdateUnitSystemName">
+    @if (drillStringComponentList == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <div hidden="@isHiddenMainPanel">
+            <MudPaper Class="pa-4">
+                <MudStack Spacing="2">
+                    <MudDivider />
+                    <MudDataGrid T="DrillStringComponent" MultiSelection="true" Items="@drillStringComponentList" SelectedItemsChanged="@SelectedItemsChanged"
+                                 SortMode="SortMode.Multiple" Filterable="true" QuickFilter="@_drillStringComponentFilter" Hover="true" RowClick="@RowClicked"
+                        Hideable="false" ReadOnly="false" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual">
+                        <ToolBarContent>
+                            <MudText Typo="Typo.h6">Drillstring components</MudText>
+                            <MudSpacer />
+                            <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+                                AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                        <!-- table with components information  -->           
+                        </ToolBarContent>             
+                        <Columns>
+                            <SelectColumn T="DrillStringComponent" />
+                            <PropertyColumn Property="x => x.Name" Title="Component name" Sortable="true" Filterable="true" />                                    
+                            <PropertyColumn Property="x => x.Type.ToString()" Title="Type" Sortable="true" Filterable="true" />    
+                            <PropertyColumn Property="x => getFieldIdClient.CheckGuidExistance(x.FieldID, fieldIdToNameDict)" Title="Field" Sortable="true" Filterable="true" />    
+                          
+                            <TemplateColumn CellClass="d-flex justify-end" Sortable="false" Filterable="false">
+                                <CellTemplate>
+                                    <MudIconButton Class="mx-2" Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="(() => DeleteDrillStringComponent(context.Item.MetaInfo.ID))" />
+                                </CellTemplate>
+                            </TemplateColumn>
+                        </Columns>                        
+                        <PagerContent>
+                            <MudDataGridPager T="DrillStringComponent" />
+                        </PagerContent>
+                    </MudDataGrid>        
+                    <MudGrid>
+                        <MudItem xs="3">
+                            <MudButton OnClick="@OnClickAdd" IconColor="Color.Success" StartIcon="@Icons.Material.Filled.Add">New component </MudButton>                         
+                        </MudItem>
+                        <MudItem xs="3">
+                            <MudButton OnClick="@DeleteSelectedDrillStringComponent" IconColor="Color.Error" StartIcon="@Icons.Material.Filled.Delete">delete selected components </MudButton>             
+                        </MudItem>
+                    </MudGrid>
+               </MudStack>
+            </MudPaper>
+            <div hidden="@(!addPanelOpen)"> 
+                <MudPaper Elevation="2" Class="py-6" Style="@($"position: {DataUtils.FLOATING_POSITION}; background:{DataUtils.FLOATING_COLOUR};")" > 
+                    <MudToolBar>
+                        <MudSpacer/>
+                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Close" Color="Color.Dark" OnClick="OnClickClosePanel" Size="Size.Medium">                                    
+                            close
+                        </MudButton>
+                    </MudToolBar>
+                    <DrillStringComponentAdd/>                            
+                </MudPaper>
+            </div>
+            @if(drillStringComponentToEdit != null)
+            {
+                <div hidden="@(!editPanelOpen)"> 
+                    <MudPaper Elevation="2" Class="py-6" Style="@($"position: {DataUtils.FLOATING_POSITION}; background:{DataUtils.FLOATING_COLOUR};")" >
+                        <MudToolBar>
+                            <MudSpacer/>
+                            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Close" Color="Color.Dark" OnClick="OnClickCloseEditPanel" Size="Size.Medium">                                    
+                                close
+                            </MudButton>
+                        </MudToolBar> 
+                       <DrillStringComponentEdit @ref="editCompReference" DrillStringComponentToEdit = "@drillStringComponentToEdit" 
+                            DrillStringComponentParts="@drillStringComponentPartsToEdit"/>               
+                    </MudPaper>
+                </div>
+            }
+        </div>
+    }
+    <div hidden="@hidePartView">
+        <MudPaper Elevation="2" Class="py-6" Style="@($"position: {DataUtils.FLOATING_POSITION}; background:{DataUtils.FLOATING_COLOUR};")">
+            <MudToolBar>   
+                <MudText Typo="Typo.h6" Style="@($"color:{Colors.Gray.Lighten5};")"><b>@componentName</b></MudText>
+                <MudSpacer/>
+                <MudButton Variant="Variant.Filled" Color="Color.Dark" StartIcon="@Icons.Material.Outlined.Close" OnClick="CloseViewDrillStringComponent"> Close view </MudButton>                             
+            </MudToolBar>    
+            <DrillStringComponentView Item="drillStringComponentParts"/>
+        </MudPaper>  
+    </div>
+
+</MudUnitAndReferenceChoiceTag>
+
+@code {
+    [Inject] private IDialogService DialogService { get; set; }
+    // DrillStringComponent related variables
+    private string _drillStringComponentName = "";
+    private string[] _drillStringComponentPartName = new string[50];
+    private double[] _drillStringComponentOD  = new double[50]; 
+    private double[] _drillStringComponentID = new double[50]; 
+    private double[] _drillStringComponentLength = new double[50];
+    private List<NameIdPair>? fieldNameAndId = new();
+    private DrillStringComponentPart[] ComponentPartsArray = new DrillStringComponentPart[50];
+    private bool addPanelOpen = false;
+    private int numberOfParts = 3;
+    private DrillStringComponentTypes typeSelectOptions {get; set;} = DrillStringComponentTypes.DrillPipe;
+    private List<DrillStringComponent> drillStringComponentList = new();
+    private bool AdvancedComponentEditionTrue { get; set; } = false;
+    private List<DrillStringComponent> selectedDrillStringComponentList = new();
+    private string componentName = "";
+    private List<DrillStringComponentPart>? drillStringComponentParts = null;
+        
+    //Editor variables
+    private bool editPanelOpen = false;
+    private double drillStringComponentParamValue;
+    private DrillStringComponent? drillStringComponentToEdit;
+    private List<DrillStringComponentPart> drillStringComponentPartsToEdit = new();
+    
+    private DrillStringComponentEdit? editCompReference;
+    //UI related variables
+    public bool isHiddenMainPanel;
+    private string? _searchString;
+    bool hidePartView = true;
+    private GetDigiWellClassClient getFieldIdClient = new GetDigiWellClassClient(TypeSelect.Field);
+    private Guid fieldID;
+    private Dictionary<Guid, string> fieldIdToNameDict = new();
+    //Expand component lists
+    async void OnClickClosePanel() {
+        addPanelOpen = false;
+        await ReloadComponents();
+    }
+    async void OnClickCloseEditPanel() {
+        editPanelOpen = false;
+        await ReloadComponents();
+    }
+
+
+    private void OnClickAdd() {
+        addPanelOpen = true;
+    }
+    private void InitializeComponentPartsArray() 
+    {
+        for (int i = 0; i < 50 ; i += 1 )
+        {
+            ComponentPartsArray[i] = new DrillStringComponentPart()
+            {
+                ID = Guid.NewGuid(),
+                Name = "",
+                InnerDiameter = 0.0,
+                OuterDiameter = 0.0,
+                TotalLength = 0.0,
+                YoungModulus = 220E9,
+                PoissonRatio = 0.28,
+                MaterialDensity = 7800.0,
+                AveragePartDensity = 7800.0,
+                HeatCapacity = 510.0,
+                ThermalCondutivity = 54.0,
+                Mass = 0.0,
+                FirstCrossSectionTorsionalInertia = 0.0,
+                SecondCrossSectionTorsionalInertia = null
+            };
+        }
+    }
+    async Task ReloadComponents()
+    {
+        try
+        {            
+            InitializeComponentPartsArray();
+            drillStringComponentList.Clear();
+            //Show main panel
+            isHiddenMainPanel = false;
+            //Get Info from Fields app
+
+            // Starting all loading tasks asynchronously
+            logger.LogInformation("Trying to load list of DrillStringComponent from client: " + APIUtils.HttpClientDrillString);
+            var drillStringComponentTask = APIUtils.ClientDrillString.GetAllDrillStringComponentAsync();
+            await getFieldIdClient.GetAllAsync(fieldIdToNameDict);
+            List<Task> loadingTaskList = new List<Task>() { drillStringComponentTask};
+
+            // Awaiting tasks and retrieve results as they become available
+            while (loadingTaskList.Count > 0)
+            {
+                Task finishedTask = await Task.WhenAny(loadingTaskList);
+                if (finishedTask == drillStringComponentTask)
+                {
+                    // drillStringComponentTask
+                    try
+                    {
+                        drillStringComponentList = (List<DrillStringComponent>)await drillStringComponentTask;
+                        if (drillStringComponentList != null)
+                        {
+                            drillStringComponentList.Sort((f1, f2) => f1.Name.CompareTo(f2.Name));
+                        }
+                        else
+                        {
+                            logger.LogWarning("Returned list of DrillStringComponent were null on initialization");
+                            Snackbar.Add("Returned list of DrillStringComponent were null on initialization", Severity.Warning);
+                        }
+                    }
+                    catch (ApiException ex)
+                    {
+                        logger.LogError(ex, "Impossible to load DrillStringComponent from client");
+                    }
+                }
+                await finishedTask;
+                loadingTaskList.Remove(finishedTask);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Impossible to load list of DrillStringComponent on initialization");
+        }
+        await InvokeAsync(() => { StateHasChanged(); });
+
+    }    
+    
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {            
+            InitializeComponentPartsArray();
+            drillStringComponentList.Clear();
+            //Show main panel
+            isHiddenMainPanel = false;
+            //Get Info from Fields app
+
+            // Starting all loading tasks asynchronously
+            logger.LogInformation("Trying to load list of DrillStringComponent from client: " + APIUtils.HttpClientDrillString);
+            var drillStringComponentTask = APIUtils.ClientDrillString.GetAllDrillStringComponentAsync();
+            await getFieldIdClient.GetAllAsync(fieldIdToNameDict);
+            List<Task> loadingTaskList = new List<Task>() { drillStringComponentTask};
+
+            // Awaiting tasks and retrieve results as they become available
+            while (loadingTaskList.Count > 0)
+            {
+                Task finishedTask = await Task.WhenAny(loadingTaskList);
+                if (finishedTask == drillStringComponentTask)
+                {
+                    // drillStringComponentTask
+                    try
+                    {
+                        drillStringComponentList = (List<DrillStringComponent>)await drillStringComponentTask;
+                        if (drillStringComponentList != null)
+                        {
+                            drillStringComponentList.Sort((f1, f2) => f1.Name.CompareTo(f2.Name));
+                        }
+                        else
+                        {
+                            logger.LogWarning("Returned list of DrillStringComponent were null on initialization");
+                            Snackbar.Add("Returned list of DrillStringComponent were null on initialization", Severity.Warning);
+                        }
+                    }
+                    catch (ApiException ex)
+                    {
+                        logger.LogError(ex, "Impossible to load DrillStringComponent from client");
+                    }
+                }
+                await finishedTask;
+                loadingTaskList.Remove(finishedTask);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Impossible to load list of DrillStringComponent on initialization");
+        }
+        await InvokeAsync(() => { StateHasChanged(); });
+    }
+    private async Task AddDrillStringComponent()
+    {
+        try
+        {            
+            //ScalarDrillingProperty myDerivedData1Param = new ScalarDrillingProperty() { DiracDistributionValue = new DiracDistribution() { Value = 1.0 } };
+            List<DrillStringComponentPart>? drillStringComponentPartList = new(); 
+            for (int i = 0; i < numberOfParts; i += 1 )
+            {
+                //Check if there is an input for the minimal geometrical data required
+                if (ComponentPartsArray[i].OuterDiameter * ComponentPartsArray[i].TotalLength != 0.0)
+                {
+                        drillStringComponentPartList.Add(ComponentPartsArray[i]);
+                }
+            }
+           
+            if (drillStringComponentPartList.Count > 0)
+            {
+                MetaInfo metaInfo = new() { ID = Guid.NewGuid(), HttpHostName = APIUtils.HostNameDrillString, HttpHostBasePath = APIUtils.HostBasePathDrillString, HttpEndPoint = "DrillString/" };
+                DateTimeOffset creationDate = DateTimeOffset.UtcNow;
+                //Create instance of new element
+                DrillStringComponent currentDrillStringComponent = new DrillStringComponent 
+                {
+                    MetaInfo = metaInfo,
+                    Name = _drillStringComponentName, 
+                    CreationDate = creationDate,
+                    LastModificationDate = creationDate,
+                    Type = typeSelectOptions,
+                    FieldID = fieldID, 
+                    PartList = drillStringComponentPartList
+                };            
+                await APIUtils.ClientDrillString.PostDrillStringComponentAsync(currentDrillStringComponent);
+                logger.LogInformation($"{typeSelectOptions.ToString()} component posted successfully");
+                Snackbar.Add($"{typeSelectOptions.ToString()} component posted successfully", Severity.Success);
+                //Restart values to default and go back to main drillpipe table
+                InitializeComponentPartsArray();      
+        
+                //if drillStringComponentPartList == null, the above try will fail
+           }
+            else
+            {
+                logger.LogError("Impossible to add a new component");
+                Snackbar.Add("Impossible to add a new component. Check for zero values in the OD, ID and Length elements.", Severity.Warning);            
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Impossible to add a new component");
+            Snackbar.Add("Impossible to add a new component", Severity.Warning);
+        }
+        await OnInitializedAsync();
+    }
+    private async Task RowClicked(DataGridRowClickEventArgs<DrillStringComponent> args)
+    {
+        await EditDrillStringComponent(args.Item.MetaInfo.ID);
+    }
+    private async Task EditDrillStringComponent(Guid id)
+    {
+        try
+        {
+            drillStringComponentToEdit = await APIUtils.ClientDrillString.GetDrillStringComponentByIdAsync(id);
+            if (drillStringComponentToEdit != null)
+            {
+                drillStringComponentPartsToEdit.Clear();
+                foreach (DrillStringComponentPart dsPart in drillStringComponentToEdit.PartList)
+                {
+                    drillStringComponentPartsToEdit.Add(dsPart);
+                }
+                editPanelOpen = true;
+            }
+            else
+            {
+                logger.LogWarning("Impossible to load DrillStringComponent");
+                Snackbar.Add("Impossible to load DrillStringComponent", Severity.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Impossible to load DrillStringComponent to be edited");
+        }
+        await InvokeAsync(() => { StateHasChanged(); });
+    }
+
+    private async Task DeleteDrillStringComponent(Guid id)
+    {
+        try
+        {
+            bool confirmation = await ConfirmDeletion();
+            if (confirmation)
+            {
+                await APIUtils.ClientDrillString.DeleteDrillStringComponentByIdAsync(id);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Impossible to delete DrillStringComponent");
+        }
+        await OnInitializedAsync();
+    }
+    private void CloseViewDrillStringComponent()
+    {
+        drillStringComponentParts = null;
+        componentName = "";
+        hidePartView = true;
+    }
+    private void OnClickEditDrillStringComponent(Guid IDtoEdit)
+    {   
+        editPanelOpen = true;
+    } 
+
+    private async Task DeleteSelectedDrillStringComponent()
+    {
+  
+        foreach (DrillStringComponent drillStringComponent in selectedDrillStringComponentList)
+        {
+            await DeleteDrillStringComponent(drillStringComponent.MetaInfo.ID);
+        }
+        selectedDrillStringComponentList.Clear();        
+    }
+
+    //Quick filter - filter gobally across multiple columns with the same input
+    private Func<DrillStringComponent, bool>
+        _drillStringComponentFilter => x =>
+        {
+            if (string.IsNullOrWhiteSpace(_searchString))
+                return true;
+            if ($"{x.Name} ".Contains(_searchString))
+                return true;
+            return false;
+        };
+    private async Task<bool> ConfirmDeletion()
+    {
+        var options = new DialogOptions 
+        { 
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true    
+        };
+        var dialog = await DialogService.ShowAsync<DialogDeleteTemplate>("DELETE", options);
+        var result = await dialog.Result;
+        StateHasChanged();
+        if (result == null)
+        {
+            return false;
+        }
+        else
+        {
+            return (!result.Canceled);
+        }
+    }
+    //Unit-related operations
+    private void UpdateDrillStringComponentParam(double? val)
+    {
+        if (val != null)
+            drillStringComponentParamValue = (double)val;
+    }
+    public void ManageUnits()
+    {
+    }
+
+    //Events
+    private void StartedEditingItem(DrillStringComponent item)
+    {
+        //Activating Edit event capture with parameter StartedEditingItem="@StartedEditingItem" in MudDataGrid; arguments are specified in OnClick="@context.Actions.StartedEditingItem(...)"
+    }
+
+    private void CancelledEditingItem(DrillStringComponent item)
+    {
+        //Activating Cancel event capture with parameter CancelledEditingItem = "@CancelledEditingItem" in MudDataGrid; arguments are specified in OnClick="@context.Actions.CancelledEditingItem(...)"
+    }
+
+    private void CommittedItemChanges(DrillStringComponent item)
+    {
+        //Activating Commit event capture with parameter CommittedItemChanges = "@CommittedItemChanges" in MudDataGrid; arguments are specified in OnClick="@context.Actions.CommittedEditingItem(...)"
+    }
+
+    void SelectedItemsChanged(HashSet<DrillStringComponent>
+        items)
+    {
+        selectedDrillStringComponentList.Clear();
+        selectedDrillStringComponentList.InsertRange(0, items);        
+    }
+
+    private async void ShowMainPanel()
+    {
+        isHiddenMainPanel = false;
+        await OnInitializedAsync();
+    }
+}

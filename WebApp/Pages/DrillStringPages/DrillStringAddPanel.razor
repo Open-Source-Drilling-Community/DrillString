@@ -1,0 +1,256 @@
+﻿@inject ILogger<DrillStringMain> logger
+@inject ISnackbar Snackbar
+
+@if (DrillString != null)
+{
+    <MudPaper Class="my-4 py-4">
+        <MudText Typo="Typo.h6">Drill-string</MudText>
+        <MudDivider Class="mb-2" />
+        <MudGrid Class="my-2">
+            <InputHeader xs="2" Text="Name" />
+            <InputHeader xs="2" Text="Description" />
+            <InputHeader xs="2" Text="Field" />
+            <InputHeader xs="2" Text="Cluster" />
+            <InputHeader xs="2" Text="Well" />
+            <InputHeader xs="2" Text="Wellbore" />
+        </MudGrid>
+        <MudGrid Class="my-2">
+            <MudItem xs="2">
+                <MudTextField @bind-Value="DrillString.Name" Variant="Variant.Text"></MudTextField>
+            </MudItem>
+            <MudItem xs="2">
+                <MudTextField @bind-Value="DrillString.Description" Variant="Variant.Text"></MudTextField>
+            </MudItem>
+            @if (Fields != null)
+            {
+                <MudItem xs="2">
+                    <MudSelect Label="Field" @bind-Value="@_selectedField" Dense="true" ToStringFunc="@(s => s?.Name)">
+                        @foreach (var fieldKPV in Fields)
+                        {
+                            if (fieldKPV.Key != Guid.Empty && fieldKPV.Value != null && !string.IsNullOrEmpty(fieldKPV.Value.Name))
+                            {
+                                <MudSelectItem Value="@fieldKPV.Value">@fieldKPV.Value.Name</MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                </MudItem>
+            }
+            else
+            {
+                <MudItem xs="2" />
+            }
+            @if (Clusters != null && _selectedField != null)
+            {
+                <MudItem xs="2">
+                    <MudSelect Label="Cluster" @bind-Value="@_selectedCluster" Dense="true" ToStringFunc="@(s => s?.Name)">
+                        @foreach (var clusterKVP in Clusters.Where(x => (x.Value != null && x.Value.FieldID != null && _selectedField != null && _selectedField.MetaInfo != null && _selectedField.MetaInfo.ID == x.Value.FieldID && !x.Value.IsSingleWell)))
+                        {
+                            <MudSelectItem Value="@clusterKVP.Value">@clusterKVP.Value.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            }
+            else
+            {
+                <MudItem xs="2" />
+            }
+            @if (Wells != null)
+            {
+                <MudItem xs="2">
+                    <MudSelect Label="Well" @bind-Value="@_selectedWell" Dense="true" ToStringFunc="@(s => s?.Name)">
+                        @foreach (var wellKVP in Wells.Where(x => (x.Value != null && ((x.Value.ClusterID != null && _selectedCluster != null && _selectedCluster.MetaInfo != null && _selectedCluster.MetaInfo.ID == x.Value.ClusterID && !x.Value.IsSingleWell) || (x.Value.IsSingleWell)))))
+                        {
+                            <MudSelectItem Value="@wellKVP.Value">@wellKVP.Value.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            }
+            else
+            {
+                <MudItem xs="2" />
+            }
+            @if (WellBores != null && _selectedWell != null)
+            {
+                <MudItem xs="2">
+                    <MudSelect Label="Wellbore" @bind-Value="@_selectedWellBore" Dense="true" ToStringFunc="@(s => s?.Name)">
+                        @foreach (var wellBoreKVP in WellBores.Where(x => (x.Value != null && x.Value.WellID != null && _selectedWell != null && _selectedWell.MetaInfo != null && _selectedWell.MetaInfo.ID == x.Value.WellID)))
+                        {
+                            <MudSelectItem Value="@wellBoreKVP.Value">@wellBoreKVP.Value.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            }
+            else
+            {
+                <MudItem xs="2" />
+            }
+        </MudGrid>
+        <MudGrid>
+            <MudItem xs="2" Class="my-2 ml-4">
+                <MudNumericField HideSpinButtons="false" Value="numberOfSections" Label="Number of Sections" T="int" Variant="Variant.Text" Min="1" Max="49" ValueChanged="UpdateSectionListSize">
+                </MudNumericField>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+    <MudGrid>
+        <!-- Types of components -->
+        @for (int j = 0; j < numberOfSections; j++)
+        {
+            index = j;
+            <DrillStringSectionAdd index="index" drillStringComponents="drillStringComponentList" drillStringSections="drillStringSectionList" />
+        }
+    </MudGrid>
+
+    <MudToolBar>
+        <MudSpacer />
+        <MudButton IconColor="@Color.Primary" StartIcon="@Icons.Material.Filled.Save" Size="@Size.Medium" OnClick="@SaveDrillString">Save and Close</MudButton>
+        <MudButton IconColor="@Color.Primary" StartIcon="@Icons.Material.Filled.Close" Size="@Size.Medium" OnClick="@CloseDrillString">Close</MudButton>
+    </MudToolBar>
+
+    <div hidden="@(!AddComponentPanelOpen)">
+        <MudPaper Elevation="2" Class="py-6" Style="@($"position: {DataUtils.FLOATING_POSITION}; background:{DataUtils.FLOATING_COLOUR};")">
+            <MudToolBar>
+                <MudSpacer />
+                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Dark" OnClick="OnClickCloseComponentPanel" Size="Size.Medium">
+                    close
+                </MudButton>
+            </MudToolBar>
+            <DrillStringComponentAdd />
+        </MudPaper>
+    </div>
+
+}
+
+@code {
+
+    [Parameter]
+    public DrillString? DrillString { get; set; } = null;
+    [Parameter]
+    public Dictionary<Guid, Field>? Fields { get; set; } = null;
+    [Parameter]
+    public Dictionary<Guid, Cluster>? Clusters { get; set; } = null;
+    [Parameter]
+    public Dictionary<Guid, Well>? Wells { get; set; } = null;
+    [Parameter]
+    public Dictionary<Guid, WellBore>? WellBores { get; set; } = null;
+    [Parameter]
+    public Action? OnUpdate { get; set; }
+
+    private bool AddComponentPanelOpen = false;
+
+    private Field? _selectedField = null;
+    private Cluster? _selectedCluster = null;
+    private Well? _selectedWell = null;
+    private WellBore? _selectedWellBore = null;
+
+    private List<DrillStringSection> drillStringSectionList = new List<DrillStringSection> { new DrillStringSection() { Count = 1 } };
+    private List<DrillStringComponent> drillStringComponentList = new();
+    private int index;
+    private int numberOfSections = 1;
+
+    private async Task SaveDrillString()
+    {
+        if (DrillString != null)
+        {
+            try
+            {
+                if (DrillString.Name == null)
+                {
+                    DrillString.Name = $"Drill-string";
+                }
+
+                MetaInfo metaInfo = new() { ID = Guid.NewGuid(), HttpHostName = APIUtils.HostNameDrillString, HttpHostBasePath = APIUtils.HostBasePathDrillString, HttpEndPoint = "DrillString/" };
+                DateTimeOffset creationDate = DateTimeOffset.UtcNow;
+                DrillString.MetaInfo = metaInfo;
+                DrillString.CreationDate = creationDate;
+                DrillString.LastModificationDate = creationDate;
+                DrillString.WellBoreID = (_selectedWellBore != null && _selectedWellBore.MetaInfo != null && _selectedWellBore.MetaInfo.ID != Guid.Empty) ? _selectedWellBore.MetaInfo.ID : null;
+                await APIUtils.ClientDrillString.PostDrillStringAsync(DrillString);
+                logger.LogInformation("Drill-string posted successfully");
+                Snackbar.Add("Drill-string posted successfully", Severity.Success);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Impossible to add a new Drill-string");
+                Snackbar.Add("Impossible to add a new Drill-string", Severity.Warning);
+            }
+            OnUpdate?.Invoke();
+        }
+    }
+
+    private void CloseDrillString()
+    {
+        OnUpdate?.Invoke();
+    }
+
+    async void OnClickCloseComponentPanel()
+    {
+        AddComponentPanelOpen = false;
+        await LoadDrillStringComponents();
+    }
+    private void UpdateSectionListSize(int sectNum)
+    {
+        numberOfSections = sectNum;
+        if (drillStringSectionList.Count < numberOfSections)
+        {
+            while (drillStringSectionList.Count < numberOfSections)
+            {
+                drillStringSectionList.Add(new DrillStringSection() { Count = 1 });
+            }
+        }
+
+        else if (drillStringSectionList.Count > numberOfSections)
+        {
+            while (drillStringSectionList.Count > numberOfSections)
+            {
+                drillStringSectionList.RemoveAt(drillStringSectionList.Count - 1);
+            }
+        }
+    }
+
+    protected async Task LoadDrillStringComponents()
+    {
+        //Open add panel
+        //OnClickExpandAddPanel();
+        try
+        {
+            //Clear old lists
+            drillStringComponentList.Clear();
+            logger.LogInformation("Trying to load list of DrillStringComponent from client: " + APIUtils.HttpClientDrillString);
+            var drillStringComponentTask = APIUtils.ClientDrillString.GetAllDrillStringComponentAsync();
+            List<Task> loadingTaskList = new List<Task>() { drillStringComponentTask };
+            while (loadingTaskList.Count > 0)
+            {
+                Task finishedTask = await Task.WhenAny(loadingTaskList);
+                if (finishedTask == drillStringComponentTask)
+                {
+                    try
+                    {
+                        // Get all components
+                        drillStringComponentList = (List<DrillStringComponent>)await drillStringComponentTask;
+                        if (drillStringComponentList != null)
+                        {
+                            drillStringComponentList.Sort((f1, f2) => f1.Name.CompareTo(f2.Name));
+                        }
+                        else
+                        {
+                            logger.LogWarning("Returned list of DrillStringComponent were null");
+                            Snackbar.Add("Returned list of DrillStringComponent were null", Severity.Warning);
+                        }
+                    }
+                    catch (ApiException ex)
+                    {
+                        logger.LogError(ex, "Impossible to load DrillStringComponent from client");
+                    }
+                }
+                await finishedTask;
+                loadingTaskList.Remove(finishedTask);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Impossible to load list of drill string components for drillstring creation");
+        }
+        await InvokeAsync(() => { StateHasChanged(); });
+    }
+}
