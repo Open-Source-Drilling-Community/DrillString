@@ -34,6 +34,10 @@ namespace NORCE.Drilling.DrillString.Model
         /// the date when the data was last modified
         /// </summary>
         public DateTimeOffset? LastModificationDate { get; set; }
+        /// <summary>
+        /// Carries the guid of the associated wellbore
+        /// </summary>
+        public Guid? WellBoreID { get; set; } = null;
 
         /// <summary>
         /// default constructor required for parsing the data model as a json file
@@ -45,13 +49,14 @@ namespace NORCE.Drilling.DrillString.Model
         /// <summary>
         /// base constructor
         /// </summary>
-        public DrillStringLight(MetaInfo? metaInfo, string? name, string? descr, DateTimeOffset? creationDate, DateTimeOffset? modifDate)
+        public DrillStringLight(MetaInfo? metaInfo, string? name, string? descr, DateTimeOffset? creationDate, DateTimeOffset? modifDate, Guid? wellBoreID)
         {
             MetaInfo = metaInfo;
             Name = name;
             Description = descr;
             CreationDate = creationDate;
             LastModificationDate = modifDate;
+            WellBoreID = wellBoreID;
         }
     }
 }

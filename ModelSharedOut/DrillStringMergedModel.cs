@@ -9128,6 +9128,9 @@ namespace NORCE.Drilling.DrillString.ModelShared
         [System.Text.Json.Serialization.JsonPropertyName("LastModificationDate")]
         public System.DateTimeOffset? LastModificationDate { get; set; }
 
+        [System.Text.Json.Serialization.JsonPropertyName("WellBoreID")]
+        public System.Guid? WellBoreID { get; set; }
+
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
         [System.Text.Json.Serialization.JsonExtensionData]

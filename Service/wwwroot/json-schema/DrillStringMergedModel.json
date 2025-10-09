@@ -4427,6 +4427,11 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "WellBoreID": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
           }
         }
       },

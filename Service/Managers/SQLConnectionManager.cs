@@ -55,12 +55,11 @@ namespace NORCE.Drilling.DrillString.Service.Managers
                 { "DrillStringTable", new string[] {
                     "ID text primary key",
                     "MetaInfo text",
-                    // beginning of list of fields used only when light weight concept is implemented
                     "Name text",
                     "Description text",
-                    // end of list of fields used only when light weight concept is implemented
                     "CreationDate text",
                     "LastModificationDate text",
+                    "WellBoreID text",
                     "DrillString text" }
                 }
             };

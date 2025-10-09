@@ -294,7 +294,7 @@ namespace NORCE.Drilling.DrillString.Service.Managers
             if (connection != null)
             {
                 var command = connection.CreateCommand();
-                command.CommandText = "SELECT MetaInfo, Name, Description, CreationDate, LastModificationDate FROM DrillStringTable";
+                command.CommandText = "SELECT MetaInfo, Name, Description, CreationDate, LastModificationDate, WellBoreID FROM DrillStringTable";
                 try
                 {
                     using var reader = command.ExecuteReader();
@@ -311,12 +311,16 @@ namespace NORCE.Drilling.DrillString.Service.Managers
                         DateTimeOffset? lastModificationDate = null;
                         if (DateTimeOffset.TryParse(reader.GetString(4), out DateTimeOffset lDate))
                             lastModificationDate = lDate;
+                        Guid? wellBoreID = null;
+                        if (Guid.TryParse(reader.GetString(5), out Guid wID))
+                            wellBoreID = wID;
                         drillStringLightList.Add(new Model.DrillStringLight(
                                 metaInfo,
                                 string.IsNullOrEmpty(name) ? null : name,
                                 string.IsNullOrEmpty(descr) ? null : descr,
                                 creationDate,
-                                lastModificationDate));
+                                lastModificationDate,
+                                wellBoreID));
                     }
                     _logger.LogInformation("Returning the list of existing DrillStringLight from DrillStringTable");
                     return drillStringLightList;
@@ -371,6 +375,7 @@ namespace NORCE.Drilling.DrillString.Service.Managers
                                 "Description, " +
                                 "CreationDate, " +
                                 "LastModificationDate, " +
+                                "WellBoreID, " +
                                 "DrillString" +
                                 ") VALUES (" +
                                 $"'{drillString.MetaInfo.ID}', " +
@@ -379,6 +384,7 @@ namespace NORCE.Drilling.DrillString.Service.Managers
                                 $"'{drillString.Description}', " +
                                 $"'{cDate}', " +
                                 $"'{lDate}', " +
+                                $"'{drillString.WellBoreID}', " +
                                 $"'{data}'" +
                                 ")";
                             int count = command.ExecuteNonQuery();
@@ -457,6 +463,7 @@ namespace NORCE.Drilling.DrillString.Service.Managers
                             $"Description = '{drillString.Description}', " +
                             $"CreationDate = '{cDate}', " +
                             $"LastModificationDate = '{lDate}', " +
+                            $"WellBoreID = '{drillString.WellBoreID}', " +
                             $"DrillString = '{data}' " +
                             $"WHERE ID = '{guid}'";
                         int count = command.ExecuteNonQuery();
