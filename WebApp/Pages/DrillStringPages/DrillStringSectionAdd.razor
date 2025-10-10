@@ -1,6 +1,6 @@
 
-    <MudPaper Style="@($"background:{createRowColor()};")" Width="100%" Class="my-2">
-        <MudGrid Class="ml-10">  
+    <MudPaper Class="my-2 mx-4 px-4" Style="@($"background:{createRowColor()};")">
+        <MudGrid>  
             <MudItem xs="3">
                 <MudTextField 
                     @bind-Value="drillStringSections[index].Name" Label="Section name" T="string" Variant="Variant.Text">
