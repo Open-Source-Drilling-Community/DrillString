@@ -8,21 +8,24 @@ public static class APIUtils
     public static readonly HttpClient HttpClientDrillString = APIUtils.SetHttpClient(HostNameDrillString, HostBasePathDrillString);
     public static readonly NORCE.Drilling.DrillString.ModelShared.Client ClientDrillString = new NORCE.Drilling.DrillString.ModelShared.Client(APIUtils.HttpClientDrillString.BaseAddress!.ToString(), APIUtils.HttpClientDrillString);
     // Field api
-    public static readonly string HostDevDigiWells = "https://dev.digiwells.no/";
+    public static readonly string HostNameField = NORCE.Drilling.DrillString.WebApp.Configuration.FieldHostURL!;
     public static readonly string HostBasePathField = "Field/api/";
-    public static readonly HttpClient HttpClientField = APIUtils.SetHttpClient(HostDevDigiWells, HostBasePathField);
+    public static readonly HttpClient HttpClientField = APIUtils.SetHttpClient(HostNameField, HostBasePathField);
     public static readonly NORCE.Drilling.DrillString.ModelShared.Client ClientField = new NORCE.Drilling.DrillString.ModelShared.Client(APIUtils.HttpClientField.BaseAddress!.ToString(), APIUtils.HttpClientField);
     // Cluster api
+    public static readonly string HostNameCluster = NORCE.Drilling.DrillString.WebApp.Configuration.ClusterHostURL!;
     public static readonly string HostBasePathCluster = "Cluster/api/";
-    public static readonly HttpClient HttpClientCluster = APIUtils.SetHttpClient(HostDevDigiWells, HostBasePathCluster);
+    public static readonly HttpClient HttpClientCluster = APIUtils.SetHttpClient(HostNameCluster, HostBasePathCluster);
     public static readonly NORCE.Drilling.DrillString.ModelShared.Client ClientCluster = new NORCE.Drilling.DrillString.ModelShared.Client(APIUtils.HttpClientCluster.BaseAddress!.ToString(), APIUtils.HttpClientCluster);
     // Well api
+    public static readonly string HostNameWell = NORCE.Drilling.DrillString.WebApp.Configuration.WellHostURL!;
     public static readonly string HostBasePathWell = "Well/api/";
-    public static readonly HttpClient HttpClientWell = APIUtils.SetHttpClient(HostDevDigiWells, HostBasePathWell);
+    public static readonly HttpClient HttpClientWell = APIUtils.SetHttpClient(HostNameWell, HostBasePathWell);
     public static readonly NORCE.Drilling.DrillString.ModelShared.Client ClientWell = new NORCE.Drilling.DrillString.ModelShared.Client(APIUtils.HttpClientWell.BaseAddress!.ToString(), APIUtils.HttpClientWell);
     // WellBore api
+    public static readonly string HostNameWellBore = NORCE.Drilling.DrillString.WebApp.Configuration.WellBoreHostURL!;
     public static readonly string HostBasePathWellBore = "WellBore/api/";
-    public static readonly HttpClient HttpClientWellBore = APIUtils.SetHttpClient(HostDevDigiWells, HostBasePathWellBore);
+    public static readonly HttpClient HttpClientWellBore = APIUtils.SetHttpClient(HostNameWellBore, HostBasePathWellBore);
     public static readonly NORCE.Drilling.DrillString.ModelShared.Client ClientWellBore = new NORCE.Drilling.DrillString.ModelShared.Client(APIUtils.HttpClientWellBore.BaseAddress!.ToString(), APIUtils.HttpClientWellBore);
 
     public static readonly string HostNameUnitConversion = NORCE.Drilling.DrillString.WebApp.Configuration.UnitConversionHostURL!;
