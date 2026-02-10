@@ -159,7 +159,6 @@
                 DrillString.MetaInfo = metaInfo;
                 DrillString.CreationDate = creationDate;
                 DrillString.LastModificationDate = creationDate;
-                DrillString.SensorsList = sensorsList;
                 DrillString.WellBoreID = (_selectedWellBore != null && _selectedWellBore.MetaInfo != null && _selectedWellBore.MetaInfo.ID != Guid.Empty) ? _selectedWellBore.MetaInfo.ID : null;
                 await APIUtils.ClientDrillString.PostDrillStringAsync(DrillString);
                 logger.LogInformation("Drill-string posted successfully");
@@ -249,11 +248,13 @@
         }
         await InvokeAsync(() => { StateHasChanged(); });
     }
-    private void UpdateSensors()
+    private void UpdateSensors(List<DrillStringSensor>? val)
     {
         if (DrillString != null)
         {
-            DrillString.SensorsList = sensorsList;
+            DrillString.SensorsList = val;
+            sensorsList = val;
+
         }
     }
 }

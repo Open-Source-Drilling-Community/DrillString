@@ -63,7 +63,8 @@
                                 SIValueChanged="val => SensorModel[i].SensorAngles[j] = val"/>                                
                     }                                                
                 </MudItem>
-                <!-- Delete Button -->                
+                <!-- Delete Button -->        
+                <MudSpacer />        
                 <MudItem xs="1">
                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => RemoveSensor(i)" />  
                 </MudItem>            
@@ -80,7 +81,9 @@
     [Parameter]
     public List<DrillStringSensor>? SensorModel { get; set; }
     [Parameter]
-    public EventCallback ValueChanged { get; set; }
+    public EventCallback<List<DrillStringSensor>?> ValueChanged { get; set; }
+
+    private List<DrillStringSensor>? S { get; set; }
     private List<int> sensorTypeValues = new List<int>();
     private List<List<DrillStringSensorTypes>> selectedSensorTypes = new List<List<DrillStringSensorTypes>>();
 
@@ -128,11 +131,30 @@
         }
         await base.OnInitializedAsync();
     } 
-
+    protected override async Task OnParametersSetAsync()
+    {
+        if (SensorModel != null)
+        {
+            for (int i = 0; i < SensorModel.Count; i++)
+            {
+                sensorTypeValues.Add(SensorModel[i].SensorTypeInt);
+                selectedSensorTypes.Clear();                
+                selectedSensorTypes.Add(new List<DrillStringSensorTypes>());
+                foreach (DrillStringSensorTypes sensorType in Enum.GetValues<DrillStringSensorTypes>())
+                {                    
+                    if ((SensorModel[i].SensorType & sensorType) != 0)
+                    {  
+                        selectedSensorTypes[i].Add(sensorType);
+                    }                
+                }
+            }
+        }
+        await base.OnParametersSetAsync();
+    }
 
     private async Task SendMessage()
     {
-        await ValueChanged.InvokeAsync();
+        await ValueChanged.InvokeAsync(SensorModel);
     }
 
     private async Task HandleValidSubmit()
@@ -141,7 +163,7 @@
         await Task.CompletedTask;
     }
 
-    private async void AddSensor()
+    private async Task AddSensor()
     {
         if (SensorModel == null)
         {
@@ -155,10 +177,10 @@
                 DrillStringSensorTypes.Acoustic
             }
         );
-        //await SendMessage();
+        await SendMessage();
         
     }
-    private async void RemoveSensor(int index)
+    private async Task RemoveSensor(int index)
     {
         if (SensorModel != null && SensorModel.Count> 0)
         {
@@ -173,18 +195,19 @@
                 SensorModel = null;  
                 sensorTypeValues.Clear();           
             }                
-            //await SendMessage();
+            await SendMessage();
         }
     }
-    private async void AddAngle(DrillStringSensor context)
+    private async Task AddAngle(DrillStringSensor context)
     {        
         if (context.SensorAngles == null)
         {
             context.SensorAngles = new List<double>();             
         }
         context.SensorAngles.Add(0.0);        
+        await SendMessage();        
     }
-    private async void RemoveAngle(DrillStringSensor context)
+    private async Task RemoveAngle(DrillStringSensor context)
     {
         if (context.SensorAngles == null || context.SensorAngles.Count == 0)
         {
@@ -197,22 +220,25 @@
         {
             context.SensorAngles.Add(item);
         }
+        await SendMessage();
     }
-    private async void AddSensorType(int sensorIndex)
+    private async Task AddSensorType(int sensorIndex)
     {           
         if (SensorModel != null && SensorModel.Count > sensorIndex)
         {
             selectedSensorTypes[sensorIndex].Add(DrillStringSensorTypes.Acoustic); // Default value, can be changed by the user
         }
+        await SendMessage();
     }
-    private async void RemoveSensorType(int sensorIndex)
+    private async Task RemoveSensorType(int sensorIndex)
     {           
         if (SensorModel != null && SensorModel.Count > sensorIndex)
         {
             selectedSensorTypes[sensorIndex].RemoveAt(selectedSensorTypes[sensorIndex].Count-1);
         }
+        await SendMessage();
     }
-    private async void SensorTypeChanged(DrillStringSensorTypes sensorTypeSelected, int sensorIndex, int typeIndex)
+    private async Task SensorTypeChanged(DrillStringSensorTypes sensorTypeSelected, int sensorIndex, int typeIndex)
     {
         if (SensorModel == null || SensorModel.Count <= sensorIndex)
         {
@@ -229,5 +255,6 @@
         //Update the model
         SensorModel[sensorIndex].SensorTypeInt = (int)sensorTypeLocal;
         SensorModel[sensorIndex].SensorType = sensorTypeLocal;
+        await SendMessage();
     }
 }

@@ -9,36 +9,27 @@
         <MudButton IconColor="@Color.Primary" StartIcon="@Icons.Material.Filled.Save" Size="@Size.Medium" OnClick="@SaveDrillString">Save and Close</MudButton>
         <MudButton IconColor="@Color.Primary" StartIcon="@Icons.Material.Filled.Cancel" Size="@Size.Medium" OnClick="@CloseDrillString">Cancel</MudButton>
     </MudToolBar>
-    <MudPaper Class="py-2 px-4">
-        <MudGrid Class="my-2">
-            <InputHeader xs="3" Text="Creation date" />
-            <InputHeader xs="3" Text="Last modification date" />
-        </MudGrid>
-        <MudGrid Class="my-2">
+    <MudPaper Class="mx-4 my-4 pb-2">
+        <MudGrid Class="my-2 mx-2">
             <MudItem xs="3">
+                <MudText Typo="Typo.body1"><b>Creation Date:</b></MudText>            
                 <MudText Typo="Typo.body1">@DrillString.CreationDate</MudText>
+            
             </MudItem>
             <MudItem xs="3">
+                <MudText Typo="Typo.body1"><b>Last Modification Date:</b></MudText>
                 <MudText Typo="Typo.body1">@DrillString.LastModificationDate</MudText>
             </MudItem>
         </MudGrid>
 
-        <MudGrid Class="my-2">
-            <InputHeader xs="2" Text="Name" />
-            <InputHeader xs="2" Text="Description" />
-            <InputHeader xs="2" Text="Field" />
-            <InputHeader xs="2" Text="Cluster" />
-            <InputHeader xs="2" Text="Well" />
-            <InputHeader xs="2" Text="Wellbore" />
-        </MudGrid>
-
-        <MudGrid Class="my-2">
+        <MudGrid Class="my-2 mx-2">
             <MudItem xs="2">
-                <MudTextField @bind-Value="@DrillString.Name" Variant="Variant.Text"></MudTextField>
+                <MudTextField Label="Name" @bind-Value="@DrillString.Name" Variant="Variant.Text"></MudTextField>
             </MudItem>
             <MudItem xs="2">
-                <MudTextField @bind-Value="@DrillString.Description" Variant="Variant.Text"></MudTextField>
+                <MudTextField Label="Description" @bind-Value="@DrillString.Description" Variant="Variant.Text"></MudTextField>
             </MudItem>
+            <!-- Field selection -->
             @if (Fields != null)
             {
                 <MudItem xs="2">
@@ -53,10 +44,7 @@
                     </MudSelect>
                 </MudItem>
             }
-            else
-            {
-                <MudItem xs="2" />
-            }
+            <!-- Cluster selection -->
             @if (Clusters != null && _selectedField != null)
             {
                 <MudItem xs="2">
@@ -68,10 +56,7 @@
                     </MudSelect>
                 </MudItem>
             }
-            else
-            {
-                <MudItem xs="2" />
-            }
+            <!-- Wellselection -->
             @if (Wells != null)
             {
                 <MudItem xs="2">
@@ -83,10 +68,7 @@
                     </MudSelect>
                 </MudItem>
             }
-            else
-            {
-                <MudItem xs="2" />
-            }
+            <!-- Wellbore selection -->
             @if (WellBores != null && _selectedWell != null)
             {
                 <MudItem xs="2">
@@ -98,13 +80,10 @@
                     </MudSelect>
                 </MudItem>
             }
-            else
-            {
-                <MudItem xs="2" />
-            }
+            
         </MudGrid>
-        <MudGrid>
-            <MudItem xs="2" Class="my-2 ml-4">
+        <MudGrid Class="my-2 mx-2">            
+            <MudItem xs="2">
                 <MudNumericField HideSpinButtons="false" Value="numberOfSections" Label="Number of Sections" T="int" Variant="Variant.Text" Min="0" Max="49" ValueChanged="UpdateSectionListSize">
                 </MudNumericField>
             </MudItem>
@@ -126,7 +105,7 @@
             i++;
             if (drillStringSection != null)
             {
-                <MudPaper Class="mx-2 my-2 py-1">
+                <MudPaper Class="mx-4 my-4 py-1">
                     <MudToolBar Class="ml-2 mb-2">
                         <MudItem xs="6">
                             <MudText Typo="Typo.body1"><b>Section name: </b>@(drillStringSection.Name)</MudText>
@@ -152,6 +131,8 @@
             }
         }
     }
+    <SensorAdd SensorModel="sensorsList" ValueChanged="UpdateSensors" />
+     
     @if (editSectionPanelOpen)
     {
         <MudPaper Elevation="1" Style="@($"position: {DataUtils.FLOATING_POSITION}; background:{DataUtils.FLOATING_COLOUR};")">
@@ -176,6 +157,7 @@
             <DrillStringComponentAdd />
         </MudPaper>
     }
+      
     <MudSpacer />
     <MudToolBar>
         <MudButton IconColor="@Color.Primary" StartIcon="@Icons.Material.Filled.Save" Size="@Size.Medium" OnClick="@SaveDrillString">Save and Close</MudButton>
@@ -198,6 +180,8 @@
     public Dictionary<Guid, WellBore>? WellBores { get; set; } = null;
     [Parameter]
     public Action? OnUpdate { get; set; }
+
+    private List<DrillStringSensor>? sensorsList { get; set; }
 
     private Field? _selectedField = null;
     private Cluster? _selectedCluster = null;
@@ -258,6 +242,7 @@
             }
             if (DrillString != null)
             {
+                sensorsList = DrillString.SensorsList;
                 if (DrillString.DrillStringSectionList != null)
                 {
                     UpdateSectionListSize(DrillString.DrillStringSectionList.Count);
@@ -481,5 +466,14 @@
     private void CloseDrillString()
     {
         OnUpdate?.Invoke();
+    }
+    private void UpdateSensors(List<DrillStringSensor>? val)
+    {
+        if (DrillString != null)
+        {
+            DrillString.SensorsList = val;
+            sensorsList = val;
+
+        }
     }
 }
