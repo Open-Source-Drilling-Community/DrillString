@@ -1,6 +1,4 @@
-﻿using System.Runtime.Serialization;
-
-namespace Model.DrillStringComponentTypes
+﻿namespace Model.DrillStringComponentTypes
 {
     /// <summary>
     /// an enum to describe the types deriving from MyBaseData

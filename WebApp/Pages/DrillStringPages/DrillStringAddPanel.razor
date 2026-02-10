@@ -92,6 +92,7 @@
             index = j;
             <DrillStringSectionAdd index="index" drillStringComponents="drillStringComponentList" drillStringSections="drillStringSectionList" />
         }
+        <SensorAdd SensorModel="sensorsList" ValueChanged="UpdateSensors" />
         
         <MudToolBar>
             <MudSpacer />
@@ -128,6 +129,8 @@
     [Parameter]
     public Action? OnUpdate { get; set; }
 
+
+    private List<DrillStringSensor>? sensorsList { get; set; }
     private bool AddComponentPanelOpen = false;
 
     private Field? _selectedField = null;
@@ -156,6 +159,7 @@
                 DrillString.MetaInfo = metaInfo;
                 DrillString.CreationDate = creationDate;
                 DrillString.LastModificationDate = creationDate;
+                DrillString.SensorsList = sensorsList;
                 DrillString.WellBoreID = (_selectedWellBore != null && _selectedWellBore.MetaInfo != null && _selectedWellBore.MetaInfo.ID != Guid.Empty) ? _selectedWellBore.MetaInfo.ID : null;
                 await APIUtils.ClientDrillString.PostDrillStringAsync(DrillString);
                 logger.LogInformation("Drill-string posted successfully");
@@ -244,5 +248,12 @@
             logger.LogError(ex, "Impossible to load list of drill string components for drillstring creation");
         }
         await InvokeAsync(() => { StateHasChanged(); });
+    }
+    private void UpdateSensors()
+    {
+        if (DrillString != null)
+        {
+            DrillString.SensorsList = sensorsList;
+        }
     }
 }

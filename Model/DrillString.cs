@@ -12,6 +12,7 @@ namespace NORCE.Drilling.DrillString.Model
         /// </summary>
         public List<DrillStringSection>? DrillStringSectionList { get; set; } = null;
 
+        public List<DrillStringSensor>? SensorsList { get; set; }
         /// <summary>
         /// default constructor required for parsing the data model as a json file
         /// </summary>

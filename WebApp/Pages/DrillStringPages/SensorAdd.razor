@@ -1,0 +1,233 @@
+<MudPaper Class="mx-4 my-4 pb-2">
+    <MudToolBar>
+        <MudText Typo="Typo.h6" Class="mb-4">Add Sensor</MudText>
+        <MudSpacer />
+        <MudButton IconColor="@Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="@Size.Medium" OnClick="@AddSensor">Add Sensor</MudButton>
+    </MudToolBar>
+
+    @if(SensorModel != null)
+    {
+        <MudDivider Class="mb-2" />
+        @for(int indexSensor = 0; indexSensor < SensorModel.Count; indexSensor++)
+        {
+            int i = indexSensor; // Capture the current index for use in the lambda expression
+            <MudGrid Class="mx-2 px-2 mt-2 align-start">
+                <!-- Sensor Type -->
+                <MudItem xs="3">
+                    <MudStack Row="true">
+                        <MudText Typo="Typo.body1"><b>Sensor Type</b></MudText>
+                        <MudSpacer />
+                        <MudButton StartIcon="@Icons.Material.Filled.Add"    IconColor="@Color.Primary" Size="@Size.Small" OnClick="@(() => AddSensorType(i))"/>
+                        <MudButton StartIcon="@Icons.Material.Filled.Delete" IconColor="@Color.Error"   Size="@Size.Small" OnClick="@(() => RemoveSensorType(i))" />                               
+                    </MudStack>
+                    @for(int index = 0; index < selectedSensorTypes[i].Count; index++)
+                    {
+                        int j = index; // Capture the current index for use in the lambda expression
+                        <MudSelect T="DrillStringSensorTypes" Value="@selectedSensorTypes[i][j]" Variant="Variant.Text" Dense="true" ValueChanged="val => SensorTypeChanged(val, i, j)" >
+                        @foreach (var sensorType in Enum.GetValues<DrillStringSensorTypes>())
+                        {
+                            <MudSelectItem Value="@sensorType">@SensorTypeDictToString[sensorType]</MudSelectItem>
+                        }   
+                        </MudSelect>                                         
+                    }                  
+                </MudItem>
+                <!-- Distance from bit -->
+                <MudItem xs="2">
+                    <MudText Typo="Typo.body1"><b>Distance from Bit</b></MudText>
+                    <MudInputWithUnitAdornment VariantType="Variant.Text"
+                        QuantityLabel="" QuantityName="DepthDrilling"
+                        SIValueNullable="SensorModel[i].DistanceFromBit" 
+                        SIValueNullableChanged="val => { if(val != null) SensorModel[i].DistanceFromBit = val.Value; }" />       
+                </MudItem>
+                <!-- Measurement Range -->
+                <MudItem xs="2">
+                    <MudText Typo="Typo.body1"><b>Measurement Range</b></MudText>
+                    <MudInputWithUnitAdornment VariantType="Variant.Text"
+                        QuantityLabel="" QuantityName="DepthDrilling"
+                        SIValueNullable="SensorModel[i].MeasurementRange" 
+                        SIValueNullableChanged="val => { if(val != null) SensorModel[i].MeasurementRange = val.Value; }" /> 
+                </MudItem>
+                <!-- Sensor position angle -->
+                <MudItem xs="3">
+                    <MudStack Row="true">
+                        <MudText Typo="Typo.body1"><b>Sensor Angles</b></MudText>
+                        <MudSpacer />
+                        <MudButton StartIcon="@Icons.Material.Filled.Add"    IconColor="@Color.Primary" Size="@Size.Small" OnClick="@(() => AddAngle(SensorModel[i]))"/>
+                        <MudButton StartIcon="@Icons.Material.Filled.Delete" IconColor="@Color.Error"   Size="@Size.Small" OnClick="@(() => RemoveAngle(SensorModel[i]))" />                               
+                    </MudStack>
+                    @for(int index = 0; index < SensorModel[i].SensorAngles.Count; index++)
+                    {
+                        int j = index; // Capture the current index for use in the lambda expression
+                        <MudInputAngleWithUnit VariantType="Variant.Text"                             
+                                SIValue="SensorModel[i].SensorAngles[j]" 
+                                SIValueChanged="val => SensorModel[i].SensorAngles[j] = val"/>                                
+                    }                                                
+                </MudItem>
+                <!-- Delete Button -->                
+                <MudItem xs="1">
+                   <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => RemoveSensor(i)" />  
+                </MudItem>            
+            </MudGrid>
+            @if(indexSensor != SensorModel.Count - 1)
+            {
+                <MudDivider Class="my-4" />
+            }
+        }
+    }
+</MudPaper>
+
+@code{
+    [Parameter]
+    public List<DrillStringSensor>? SensorModel { get; set; }
+    [Parameter]
+    public EventCallback ValueChanged { get; set; }
+    private List<int> sensorTypeValues = new List<int>();
+    private List<List<DrillStringSensorTypes>> selectedSensorTypes = new List<List<DrillStringSensorTypes>>();
+
+    private Dictionary<DrillStringSensorTypes, string> SensorTypeDictToString = new Dictionary<DrillStringSensorTypes, string>
+    {
+        { DrillStringSensorTypes.Acoustic, "Acoustic" },
+        { DrillStringSensorTypes.AccelerometerX, "Accelerometer X" },
+        { DrillStringSensorTypes.AccelerometerY, "Accelerometer Y" },
+        { DrillStringSensorTypes.AccelerometerZ, "Accelerometer Z" },
+        { DrillStringSensorTypes.ResistivitySource, "Resistivity Source" },
+        { DrillStringSensorTypes.ResistivityReceiver, "Resistivity Receiver" },
+        { DrillStringSensorTypes.NeutronDensity, "Neutron Density" },
+        { DrillStringSensorTypes.NeutronPorosity, "Neutron Porosity" },
+        { DrillStringSensorTypes.MagnetometerX, "Magnetometer X" },
+        { DrillStringSensorTypes.MagnetometerY, "Magnetometer Y" },
+        { DrillStringSensorTypes.RotationalPitch, "Rotational Pitch" },
+        { DrillStringSensorTypes.RotationalRoll, "Rotational Roll" },
+        { DrillStringSensorTypes.RotationalYaw, "Rotational Yaw" },
+        { DrillStringSensorTypes.BendingMomentX, "Bending Moment X" },
+        { DrillStringSensorTypes.BendingMomentY, "Bending Moment Y" },
+        { DrillStringSensorTypes.Pressure, "Pressure" },
+        { DrillStringSensorTypes.Temperature, "Temperature" },
+        { DrillStringSensorTypes.GammaRay, "Gamma Ray" },
+        { DrillStringSensorTypes.Other, "Other" },
+        { DrillStringSensorTypes.Tension, "Tension" },
+        { DrillStringSensorTypes.Torque, "Torque" },
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (SensorModel != null)
+        {
+            for (int i = 0; i < SensorModel.Count; i++)
+            {
+                sensorTypeValues.Add(SensorModel[i].SensorTypeInt);
+                selectedSensorTypes.Add(new List<DrillStringSensorTypes>());
+                foreach (DrillStringSensorTypes sensorType in Enum.GetValues<DrillStringSensorTypes>())
+                {                    
+                    if ((SensorModel[i].SensorType & sensorType) != 0)
+                    {  
+                        selectedSensorTypes[i].Add(sensorType);
+                    }                
+                }
+            }
+        }
+        await base.OnInitializedAsync();
+    } 
+
+
+    private async Task SendMessage()
+    {
+        await ValueChanged.InvokeAsync();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        // Handle the valid submission logic here
+        await Task.CompletedTask;
+    }
+
+    private async void AddSensor()
+    {
+        if (SensorModel == null)
+        {
+            SensorModel = new List<DrillStringSensor>();
+        }
+        SensorModel.Add(PseudoConstructors.ConstructDrillStringSensor());
+        sensorTypeValues.Add(0);   
+        selectedSensorTypes.Add(
+        new List<DrillStringSensorTypes>
+            {
+                DrillStringSensorTypes.Acoustic
+            }
+        );
+        //await SendMessage();
+        
+    }
+    private async void RemoveSensor(int index)
+    {
+        if (SensorModel != null && SensorModel.Count> 0)
+        {
+            if (SensorModel.Count> 1) 
+            {
+                SensorModel.RemoveAt(index);    
+                sensorTypeValues.RemoveAt(index);   
+                selectedSensorTypes.RemoveAt(index);                    
+            }           
+            else
+            {
+                SensorModel = null;  
+                sensorTypeValues.Clear();           
+            }                
+            //await SendMessage();
+        }
+    }
+    private async void AddAngle(DrillStringSensor context)
+    {        
+        if (context.SensorAngles == null)
+        {
+            context.SensorAngles = new List<double>();             
+        }
+        context.SensorAngles.Add(0.0);        
+    }
+    private async void RemoveAngle(DrillStringSensor context)
+    {
+        if (context.SensorAngles == null || context.SensorAngles.Count == 0)
+        {
+            return;
+        }
+        var list = context.SensorAngles.ToList();
+        list.RemoveAt(list.Count - 1);
+        context.SensorAngles.Clear();
+        foreach (var item in list)
+        {
+            context.SensorAngles.Add(item);
+        }
+    }
+    private async void AddSensorType(int sensorIndex)
+    {           
+        if (SensorModel != null && SensorModel.Count > sensorIndex)
+        {
+            selectedSensorTypes[sensorIndex].Add(DrillStringSensorTypes.Acoustic); // Default value, can be changed by the user
+        }
+    }
+    private async void RemoveSensorType(int sensorIndex)
+    {           
+        if (SensorModel != null && SensorModel.Count > sensorIndex)
+        {
+            selectedSensorTypes[sensorIndex].RemoveAt(selectedSensorTypes[sensorIndex].Count-1);
+        }
+    }
+    private async void SensorTypeChanged(DrillStringSensorTypes sensorTypeSelected, int sensorIndex, int typeIndex)
+    {
+        if (SensorModel == null || SensorModel.Count <= sensorIndex)
+        {
+            return;
+        }
+        //Update the selected sensor types list
+        selectedSensorTypes[sensorIndex][typeIndex] = sensorTypeSelected;
+        DrillStringSensorTypes sensorTypeLocal = new();
+        //Update local sensors
+        foreach (DrillStringSensorTypes var in selectedSensorTypes[sensorIndex])
+        {
+            sensorTypeLocal = sensorTypeLocal | var;
+        }
+        //Update the model
+        SensorModel[sensorIndex].SensorTypeInt = (int)sensorTypeLocal;
+        SensorModel[sensorIndex].SensorType = sensorTypeLocal;
+    }
+}

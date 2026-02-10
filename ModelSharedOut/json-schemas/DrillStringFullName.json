@@ -433,6 +433,32 @@
         ],
         "type": "string"
       },
+      "Model.DrillStringSensorTypes.DrillStringSensorTypes": {
+        "enum": [
+          "Acoustic",
+          "AccelerometerX",
+          "AccelerometerY",
+          "AccelerometerZ",
+          "ResistivitySource",
+          "ResistivityReceiver",
+          "NeutronDensity",
+          "NeutronPorosity",
+          "MagnetometerX",
+          "MagnetometerY",
+          "RotationalPitch",
+          "RotationalRoll",
+          "RotationalYaw",
+          "BendingMomentX",
+          "BendingMomentY",
+          "Pressure",
+          "Temperature",
+          "GammaRay",
+          "Other",
+          "Tension",
+          "Torque"
+        ],
+        "type": "string"
+      },
       "NORCE.Drilling.DrillString.Model.DrillString": {
         "type": "object",
         "properties": {
@@ -466,6 +492,13 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/NORCE.Drilling.DrillString.Model.DrillStringSection"
+            },
+            "nullable": true
+          },
+          "SensorsList": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NORCE.Drilling.DrillString.Model.DrillStringSensor"
             },
             "nullable": true
           }
@@ -743,6 +776,37 @@
               "$ref": "#/components/schemas/NORCE.Drilling.DrillString.Model.DrillStringComponent"
             },
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "NORCE.Drilling.DrillString.Model.DrillStringSensor": {
+        "type": "object",
+        "properties": {
+          "DistanceFromBit": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "MeasurementRange": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "SensorAngles": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "nullable": true
+          },
+          "SensorTypeInt": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "SensorType": {
+            "$ref": "#/components/schemas/Model.DrillStringSensorTypes.DrillStringSensorTypes"
           }
         },
         "additionalProperties": false

@@ -1,0 +1,176 @@
+<MudPaper Class="mx-4 my-4 p-4">
+    <MudToolBar>
+        <MudText Typo="Typo.h5" Class="mb-4">Add Sensor</MudText>
+        <MudSpacer />
+        <MudButton IconColor="@Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="@Size.Medium" OnClick="@AddSensor">Add Sensor</MudButton>
+    </MudToolBar>
+    @if(SensorModel != null)
+    {
+        <MudTable @ref="sensorTable" Items="@SensorModel" Hover="true" Bordered="true" Striped="true">
+            <HeaderContent>
+                <MudTh Style="width:20%">Type </MudTh>
+                <MudTh Style="width:20%">Distance from Bit </MudTh>
+                <MudTh Style="width:20%">Measurement Range </MudTh>    
+                <MudTh Style="width:30%">Sensor Angles </MudTh>                
+                <MudTh Style="width:5%"></MudTh>        
+            </HeaderContent>
+            <RowTemplate>
+                  <MudTd>
+                    <MudSelect T="DrillStringSensorTypes" @bind-Value="context.SensorType" Label="Select Sensor Type" Variant="Variant.Outlined" Dense="true">
+                        @foreach (var sensorType in Enum.GetValues<DrillStringSensorTypes>())
+                        {
+                            <MudSelectItem Value="@sensorType">@sensorType</MudSelectItem>
+                        }   
+                    </MudSelect>
+                </MudTd>
+                
+                <MudTd>
+                    <MudInputWithUnitAdornment VariantType="Variant.Text"
+                        QuantityLabel="" QuantityName="DepthDrilling"
+                        SIValueNullable="context.DistanceFromBit" 
+                        SIValueNullableChanged="val => { if(val != null) context.DistanceFromBit = val.Value; }" />       
+                </MudTd>
+                
+                <MudTd>
+                    <MudInputWithUnitAdornment VariantType="Variant.Text"
+                        QuantityLabel="" QuantityName="DepthDrilling"
+                        SIValueNullable="context.MeasurementRange" 
+                        SIValueNullableChanged="val => { if(val != null) context.MeasurementRange = val.Value; }" />    
+                </MudTd>
+                <MudTd>
+                    <MudButton IconColor="@Color.Primary" StartIcon="@Icons.Material.Filled.Add" Size="@Size.Medium" OnClick="@(() => AddAngle(context))"/>
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => RemoveAngle(context)" />                               
+                    @for(int index = 0; index < context.SensorAngles.Count; index++)
+                    {
+                        int i = index; // Capture the current index for use in the lambda expression
+                        <MudInputAngleWithUnit VariantType="Variant.Text"                             
+                                SIValue="angleValue" 
+                                SIValueChanged="val => UpdateAngle(val, i)" />                                
+                    }
+                    
+                    @*
+                    <MudTable T="double" Items="@context.SensorAngles" Hover="true" Bordered="true" Striped="true" Context="angle">
+                        <HeaderContent>
+                            <MudTh>Angle (degrees)</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>
+                                <MudInputAngleWithUnit VariantType="Variant.Text"                             
+                                SIValue="angleValue" 
+                                SIValueChanged="val => UpdateAngle(val, angle)" />    
+                            </MudTd>     
+                        </RowTemplate>                
+                    </MudTable>*@                    
+                </MudTd>
+                <MudTd>
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => RemoveSensor(context)" />                
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudPaper>
+
+@code{
+    //[Parameter]
+    private List<DrillStringSensor>? SensorModel { get; set; }
+    [Parameter]
+    public EventCallback ValueChanged { get; set; }
+    private MudTable<DrillStringSensor> sensorTable;
+    private double angleValue = 0.0; 
+    private Dictionary<DrillStringSensorTypes, string> SensorTypeOptions = new Dictionary<DrillStringSensorTypes, string>
+    {
+        { DrillStringSensorTypes.Acoustic, "Acoustic" },
+        { DrillStringSensorTypes.AccelerometerX, "Accelerometer X" },
+        { DrillStringSensorTypes.AccelerometerY, "Accelerometer Y" },
+        { DrillStringSensorTypes.AccelerometerZ, "Accelerometer Z" },
+        { DrillStringSensorTypes.ResistivitySource, "Resistivity Source" },
+        { DrillStringSensorTypes.ResistivityReceiver, "Resistivity Receiver" },
+        { DrillStringSensorTypes.NeutronDensity, "Neutron Density" },
+        { DrillStringSensorTypes.NeutronPorosity, "Neutron Porosity" },
+        { DrillStringSensorTypes.MagnetometerX, "Magnetometer X" },
+        { DrillStringSensorTypes.MagnetometerY, "Magnetometer Y" },
+        { DrillStringSensorTypes.RotationalPitch, "Rotational Pitch" },
+        { DrillStringSensorTypes.RotationalRoll, "Rotational Roll" },
+        { DrillStringSensorTypes.RotationalYaw, "Rotational Yaw" },
+        { DrillStringSensorTypes.BendingMomentX, "Bending Moment X" },
+        { DrillStringSensorTypes.BendingMomentY, "Bending Moment Y" },
+        { DrillStringSensorTypes.Pressure, "Pressure" },
+        { DrillStringSensorTypes.Temperature, "Temperature" },
+        { DrillStringSensorTypes.GammaRay, "Gamma Ray" },
+        { DrillStringSensorTypes.Other, "Other" },
+        { DrillStringSensorTypes.Tension, "Tension" },
+        { DrillStringSensorTypes.Torque, "Torque" },
+    };
+
+    private async Task SendMessage()
+    {
+        await ValueChanged.InvokeAsync();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        // Handle the valid submission logic here
+        await Task.CompletedTask;
+    }
+
+    private async void AddSensor()
+    {
+        if (SensorModel == null)
+        {
+            SensorModel = new List<DrillStringSensor>();
+        }
+        SensorModel.Add(PseudoConstructors.ConstructDrillStringSensor());
+        
+        //await SendMessage();
+    }
+    private async void AddAngle(DrillStringSensor context)
+    {        
+        if (context.SensorAngles == null)
+        {
+            context.SensorAngles = new List<double>();
+        }
+        context.SensorAngles.Add(0.0);
+    }
+    private async void RemoveAngle(DrillStringSensor context)
+    {
+        if (context.SensorAngles == null || context.SensorAngles.Count == 0)
+        {
+            return;
+        }
+        var list = context.SensorAngles.ToList();
+        list.RemoveAt(list.Count - 1);
+        context.SensorAngles.Clear();
+        foreach (var item in list)
+        {
+            context.SensorAngles.Add(item);
+        }
+    }
+    private async void RemoveSensor(DrillStringSensor context)
+    {
+        if (SensorModel != null && SensorModel.Count > 0)
+        {
+            if (SensorModel.Count > 1)            
+                SensorModel.Remove(context);               
+            else
+                SensorModel = null; 
+            
+            //await SendMessage();
+        }
+    }
+    private void UpdateAngle(double val, int indexAngle)
+    {
+        if (SensorModel != null && sensorTable.SelectedItem != null)
+        {
+            //Get selected sensor
+            DrillStringSensor? sensor = sensorTable.SelectedItem;
+            // Get the selected row
+            int indexSensor = SensorModel.IndexOf(sensorTable.SelectedItem);  
+            if (sensor.SensorAngles != null && indexAngle >= 0 && indexAngle < sensor.SensorAngles.Count)
+            {
+                SensorModel[indexSensor].SensorAngles[indexAngle] = val;
+            }
+        }
+        
+    }
+
+}
