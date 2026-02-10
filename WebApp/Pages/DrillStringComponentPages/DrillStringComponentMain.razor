@@ -35,7 +35,9 @@
                           
                             <TemplateColumn CellClass="d-flex justify-end" Sortable="false" Filterable="false">
                                 <CellTemplate>
-                                    <MudIconButton Class="mx-2" Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="(() => DeleteDrillStringComponent(context.Item.MetaInfo.ID))" />
+                                    <MudIconButton Class="mx-2" Size="@Size.Medium" Icon="@Icons.Material.Outlined.Edit" OnClick="(() => EditDrillStringComponent(context.Item.MetaInfo.ID))" />                                                                    
+                                    <MudIconButton Class="mx-2" Size="@Size.Medium" Icon="@Icons.Material.Outlined.ContentCopy" OnClick="(() => CloneDrillStringComponent(context.Item.MetaInfo.ID))" />                                                                    
+                                    <MudIconButton Class="mx-2" Size="@Size.Medium" Icon="@Icons.Material.Outlined.Delete" OnClick="(() => DeleteDrillStringComponent(context.Item.MetaInfo.ID))" />                                
                                 </CellTemplate>
                             </TemplateColumn>
                         </Columns>                        
@@ -365,6 +367,23 @@
             logger.LogError(ex, "Impossible to delete DrillStringComponent");
         }
         await OnInitializedAsync();
+    }
+    private async Task CloneDrillStringComponent(Guid id)
+    {
+        try
+        {
+            DrillStringComponent drillStringComponentToClone = await APIUtils.ClientDrillString.GetDrillStringComponentByIdAsync(id);
+            MetaInfo metaInfo = new() { ID = Guid.NewGuid(), HttpHostName = APIUtils.HostNameDrillString, HttpHostBasePath = APIUtils.HostBasePathDrillString, HttpEndPoint = "DrillString/" };
+            drillStringComponentToClone.MetaInfo = metaInfo;
+            drillStringComponentToClone.Name = "Copy of " + drillStringComponentToClone.Name;
+            await APIUtils.ClientDrillString.PostDrillStringComponentAsync(drillStringComponentToClone);
+            await OnInitializedAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Impossible to clone drill string!");
+        }
+
     }
     private void CloseViewDrillStringComponent()
     {

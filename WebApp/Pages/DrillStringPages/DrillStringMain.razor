@@ -36,6 +36,7 @@
                                             Title="Wellbore" Sortable="true" Filterable="false" />
                             <TemplateColumn CellClass="d-flex justify-end" Sortable="false" Filterable="false">
                                 <CellTemplate>
+                                    <MudIconButton Size="@Size.Medium" Icon="@Icons.Material.Outlined.Edit" OnClick="(() => EditDrillString(context.Item.MetaInfo.ID))" />                                   
                                     <MudIconButton Size="@Size.Medium" Icon="@Icons.Material.Outlined.ContentCopy" OnClick="(() => CloneDrillString(context.Item.MetaInfo.ID))" />
                                     <MudIconButton Size="@Size.Medium" Icon="@Icons.Material.Outlined.Delete" OnClick="(() => DeleteDrillString(context.Item.MetaInfo.ID))" />
                                 </CellTemplate>
@@ -243,10 +244,10 @@
 
     private async Task RowClicked(DataGridRowClickEventArgs<DrillString> args)
     {
-        await EditWellBoreArchitecture(args.Item.MetaInfo.ID);
+        await EditDrillString(args.Item.MetaInfo.ID);
     }
 
-    private async Task EditWellBoreArchitecture(Guid id)
+    private async Task EditDrillString(Guid id)
     {
         try
         {
