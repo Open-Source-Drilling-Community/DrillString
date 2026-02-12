@@ -104,8 +104,11 @@
         { DrillStringSensorTypes.RotationalYaw, "Rotational Yaw" },
         { DrillStringSensorTypes.BendingMomentX, "Bending Moment X" },
         { DrillStringSensorTypes.BendingMomentY, "Bending Moment Y" },
-        { DrillStringSensorTypes.Pressure, "Pressure" },
-        { DrillStringSensorTypes.Temperature, "Temperature" },
+        { DrillStringSensorTypes.AnnulusPressure, "Annulus Pressure" },
+        { DrillStringSensorTypes.StringPressure, "String Pressure" },        
+        { DrillStringSensorTypes.AnnulusTemperature, "Annulus Temperature" },
+        { DrillStringSensorTypes.StringTemperature, "String Temperature" },
+        { DrillStringSensorTypes.ElectronicTemperature, "Electronic Temperature" },
         { DrillStringSensorTypes.GammaRay, "Gamma Ray" },
         { DrillStringSensorTypes.Other, "Other" },
         { DrillStringSensorTypes.Tension, "Tension" },
@@ -135,16 +138,24 @@
     {
         if (SensorModel != null)
         {
+            while(selectedSensorTypes.Count < SensorModel.Count)
+            {
+                selectedSensorTypes.Add(new List<DrillStringSensorTypes>());
+            }                   
             for (int i = 0; i < SensorModel.Count; i++)
             {
+
                 sensorTypeValues.Add(SensorModel[i].SensorTypeInt);
-                selectedSensorTypes.Clear();                
-                selectedSensorTypes.Add(new List<DrillStringSensorTypes>());
+                //selectedSensorTypes.Clear();                
+                //selectedSensorTypes.Add(new List<DrillStringSensorTypes>());
                 foreach (DrillStringSensorTypes sensorType in Enum.GetValues<DrillStringSensorTypes>())
                 {                    
                     if ((SensorModel[i].SensorType & sensorType) != 0)
                     {  
-                        selectedSensorTypes[i].Add(sensorType);
+                        if (!selectedSensorTypes[i].Contains(sensorType))
+                        {
+                            selectedSensorTypes[i].Add(sensorType);
+                        }
                     }                
                 }
             }
@@ -174,11 +185,10 @@
         selectedSensorTypes.Add(
         new List<DrillStringSensorTypes>
             {
-                DrillStringSensorTypes.Acoustic
+                DrillStringSensorTypes.Other
             }
         );
-        await SendMessage();
-        
+        await SendMessage();        
     }
     private async Task RemoveSensor(int index)
     {
@@ -226,7 +236,16 @@
     {           
         if (SensorModel != null && SensorModel.Count > sensorIndex)
         {
-            selectedSensorTypes[sensorIndex].Add(DrillStringSensorTypes.Acoustic); // Default value, can be changed by the user
+            selectedSensorTypes[sensorIndex].Add(DrillStringSensorTypes.Other); // Default value, can be changed by the user
+        }
+        else if (SensorModel == null)
+        {
+            SensorModel = new List<DrillStringSensor>();
+            selectedSensorTypes.Add(new List<DrillStringSensorTypes> { DrillStringSensorTypes.Other });
+        }
+        else if(SensorModel.Count <= sensorIndex)
+        {
+            selectedSensorTypes.Add(new List<DrillStringSensorTypes> { DrillStringSensorTypes.Other });
         }
         await SendMessage();
     }

@@ -2715,7 +2715,8 @@
           "Mwd",
           "Stabilizer",
           "SteerableRotaryTool",
-          "Bit"
+          "Bit",
+          "Other"
         ],
         "type": "string"
       },
@@ -2736,8 +2737,11 @@
           "RotationalYaw",
           "BendingMomentX",
           "BendingMomentY",
-          "Pressure",
-          "Temperature",
+          "StringPressure",
+          "AnnulusPressure",
+          "StringTemperature",
+          "ElectronicTemperature",
+          "AnnulusTemperature",
           "GammaRay",
           "Other",
           "Tension",

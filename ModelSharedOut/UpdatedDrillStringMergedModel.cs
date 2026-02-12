@@ -7361,6 +7361,9 @@ namespace NORCE.Drilling.DrillString.ModelShared
         [System.Runtime.Serialization.EnumMember(Value = @"Bit")]
         Bit = 7,
 
+        [System.Runtime.Serialization.EnumMember(Value = @"Other")]
+        Other = 8,
+
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.6.2.0 (NJsonSchema v11.5.2.0 (Newtonsoft.Json v13.0.0.0))")]
@@ -7412,23 +7415,32 @@ namespace NORCE.Drilling.DrillString.ModelShared
         [System.Runtime.Serialization.EnumMember(Value = @"BendingMomentY")]
         BendingMomentY = 16384,
 
-        [System.Runtime.Serialization.EnumMember(Value = @"Pressure")]
-        Pressure = 32768,
+        [System.Runtime.Serialization.EnumMember(Value = @"StringPressure")]
+        StringPressure = 32768,
 
-        [System.Runtime.Serialization.EnumMember(Value = @"Temperature")]
-        Temperature = 65536,
+        [System.Runtime.Serialization.EnumMember(Value = @"AnnulusPressure")]
+        AnnulusPressure = 65536,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"StringTemperature")]
+        StringTemperature = 131072,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"ElectronicTemperature")]
+        ElectronicTemperature = 262144,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"AnnulusTemperature")]
+        AnnulusTemperature = 524288,
 
         [System.Runtime.Serialization.EnumMember(Value = @"GammaRay")]
-        GammaRay = 131072,
+        GammaRay = 1048576,
 
         [System.Runtime.Serialization.EnumMember(Value = @"Other")]
-        Other = 262144,
+        Other = 2097152,
 
         [System.Runtime.Serialization.EnumMember(Value = @"Tension")]
-        Tension = 524288,
+        Tension = 4194304,
 
         [System.Runtime.Serialization.EnumMember(Value = @"Torque")]
-        Torque = 1048576,
+        Torque = 8388608,
 
     }
 

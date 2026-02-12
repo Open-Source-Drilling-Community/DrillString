@@ -12,6 +12,7 @@
         Mwd,
         Stabilizer,
         SteerableRotaryTool,
-        Bit
+        Bit,
+        Other
     }
 }
