@@ -84,7 +84,8 @@
         </MudGrid>
         <MudGrid Class="my-2 mx-2">            
             <MudItem xs="2">
-                <MudNumericField HideSpinButtons="false" Value="numberOfSections" Label="Number of Sections" T="int" Variant="Variant.Text" Min="0" Max="49" ValueChanged="UpdateSectionListSize">
+                <MudNumericField HideSpinButtons="false" Value="numberOfSections" 
+                    Label="Number of Sections" T="int" Variant="Variant.Text" Min="0" Max="49" ValueChanged="UpdateSectionListSize">
                 </MudNumericField>
             </MudItem>
         </MudGrid>
@@ -99,35 +100,41 @@
         DrillString.DrillStringSectionList.Count == visibleSectionBool.Count &&
         DrillString.DrillStringSectionList.Count == drillStringComponentNestedList.Count)
     {
-        int i = -1;
-        foreach (var drillStringSection in DrillString.DrillStringSectionList)
+        if (DrillString.DrillStringSectionList.Count == 0)
         {
-            i++;
-            if (drillStringSection != null)
+            <MudText Class="mx-4" Typo="Typo.body1">No section added yet</MudText>
+        }
+        else
+        {
+            for (int index = 0; index < DrillString.DrillStringSectionList.Count; index++)
             {
-                <MudPaper Class="mx-4 my-4 py-1">
-                    <MudToolBar Class="ml-2 mb-2">
-                        <MudItem xs="6">
-                            <MudText Typo="Typo.body1"><b>Section name: </b>@(drillStringSection.Name)</MudText>
-                            <MudText Typo="Typo.body1"><b>Repetitions: </b>@(drillStringSection.Count)</MudText>
-                        </MudItem>
-                        <MudSpacer />
-                        <MudItem xs="1">
-                            <MudIconButton Size="@Size.Medium" Icon="@Icons.Material.Outlined.Edit" OnClick="(() => EditDrillStringSection(i))" />
-                        </MudItem>
-                        <MudItem xs="1">
-                            <MudIconButton Size="@Size.Medium" Icon="@expandedSectionIcon[i]" OnClick="(() => ExpandComponent(i))" />
-                        </MudItem>
-                    </MudToolBar>
-                    <MudCollapse Expanded="@visibleSectionBool[i]">
-                        <MudDataGrid Class="my-2 mx-2" T="DrillStringComponent" Items="@drillStringComponentNestedList[i]" Striped="true">
-                            <Columns>
-                                <PropertyColumn Property="x => x.Name" Title="Name" />
-                                <PropertyColumn Property="x => (x.FieldID != null && Fields != null && Fields.ContainsKey(x.FieldID.Value)) ? Fields[x.FieldID.Value].Name : string.Empty" Title="Field" />
-                            </Columns>
-                        </MudDataGrid>
-                    </MudCollapse>
-                </MudPaper>
+                int i = index;
+                {
+                    <MudPaper Class="mx-4 my-4 py-1">
+                        <MudToolBar Class="ml-2 mb-2">
+                            <MudItem xs="6">
+                                <MudText Typo="Typo.body1"><b>Section name: </b>@(DrillString.DrillStringSectionList[i].Name)</MudText>
+                                <MudText Typo="Typo.body1"><b>Repetitions: </b>@(DrillString.DrillStringSectionList[i].Count)</MudText>
+                            </MudItem>
+                            <MudSpacer />
+                            <MudItem xs="1">
+                                <MudIconButton Size="@Size.Medium" Icon="@Icons.Material.Outlined.Edit" OnClick="(() => EditDrillStringSection(i))" />
+                            </MudItem>
+                            <MudItem xs="1">
+                                <MudIconButton Size="@Size.Medium" Icon="@expandedSectionIcon[i]" OnClick="(() => ExpandComponent(i))" />
+                            </MudItem>
+                        </MudToolBar>
+                        <MudCollapse Expanded="@visibleSectionBool[i]">
+                            <MudDataGrid Class="my-2 mx-2" T="DrillStringComponent" 
+                                Items="@(DrillString.DrillStringSectionList[i].SectionComponentList)" Striped="true">
+                                <Columns>
+                                    <PropertyColumn Property="x => x.Name" Title="Name" />
+                                    <PropertyColumn Property="x => (x.FieldID != null && Fields != null && Fields.ContainsKey(x.FieldID.Value)) ? Fields[x.FieldID.Value].Name : string.Empty" Title="Field" />
+                                </Columns>
+                            </MudDataGrid>
+                        </MudCollapse>
+                    </MudPaper>
+                }
             }
         }
     }

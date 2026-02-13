@@ -365,12 +365,13 @@
         selectedDrillStringList.InsertRange(0, items);
     }
 
-    private void OpenAddPanel()
+    private async Task OpenAddPanel()
     {
-        currentDrillString = new DrillString();
-        displayMainPanel = false;
-        displayAddPanel = true;
-        displayEditPanel = false;
+
+        await APIUtils.ClientDrillString.PostDrillStringAsync(
+                PseudoConstructors.ConstructDrillString()
+            );
+        await OnInitializedAsync(); 
     }
     private async void ShowMainPanel()
     {

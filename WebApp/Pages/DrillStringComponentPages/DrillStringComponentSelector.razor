@@ -2,7 +2,10 @@
 @inject ILogger<MudInputWithUnitAdornment> logger
 
 <MudItem xs="11" Class="ml-n4">                
-    <MudSelect T="DrillStringComponent" Value="selectedComponent" Label="@($"Name | Type | Parts OD/ID [{DiameterUnits()}]")" Dense="true" Class="ml-4" ValueChanged="updateSection" >
+    <MudSelect T="DrillStringComponent" Value="selectedComponent" 
+        Label="@($"Name | Type | Parts OD/ID [{DiameterUnits()}]")" 
+        Dense="true" Class="ml-4" ValueChanged="updateSection" 
+        Text = "@((selectedComponent != null) ? selectedComponent.Name : "Select component")">
         @foreach (DrillStringComponent component in drillStringComponents)
         {
             <MudSelectItem Value="@component">
@@ -41,6 +44,19 @@
     [Parameter]
     public int indexComponent {get; set;}
     private DrillStringComponent? selectedComponent {get; set;}
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            drillStringComponents = await APIUtils.ClientDrillString.GetAllDrillStringComponentAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error initializing component list component.");
+        }
+    }
+
 
     public void ManageUnits(){}
     private double RoundDouble(double var)
