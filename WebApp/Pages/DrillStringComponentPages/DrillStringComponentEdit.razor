@@ -64,8 +64,7 @@
     [Parameter]
     public List<DrillStringComponentPart>? DrillStringComponentParts { get; set; }
     Guid? fieldID;
-    //private List<DrillStringComponentPart> DrillStringComponentParts = new();
-    private GetDigiWellClassClient getFieldIdClient = new GetDigiWellClassClient(TypeSelect.Field);
+
     private Dictionary<Guid, string> fieldIdToNameDict = new();
     private Guid? fID { get; set; }
     private Guid? ff = Guid.NewGuid();
@@ -107,7 +106,8 @@
                 }
                 fieldID = (DrillStringComponentToEdit.FieldID != null && DrillStringComponentToEdit.FieldID != Guid.Empty) ? DrillStringComponentToEdit.FieldID : null;
                 // Load fields from other microservices
-                await getFieldIdClient.GetAllAsync(fieldIdToNameDict);
+                List<Field> fields = (List<Field>) await APIUtils.ClientField.GetAllFieldAsync();  
+                fieldIdToNameDict = fields.ToDictionary(x => x.MetaInfo.ID, x => x.Name);
             }
         }
         catch (Exception ex)

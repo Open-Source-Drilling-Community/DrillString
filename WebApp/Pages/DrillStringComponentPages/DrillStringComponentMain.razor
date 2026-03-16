@@ -1,4 +1,5 @@
 ﻿@page "/DrillStringComponent"
+@using Plotly.Blazor.Traces.IsoSurfaceLib.CapsLib
 @inject ILogger<DrillStringComponentMain> logger
 @inject ISnackbar Snackbar
 @implements IUnitAwareComponent
@@ -31,7 +32,7 @@
                             <SelectColumn T="DrillStringComponent" />
                             <PropertyColumn Property="x => x.Name" Title="Component name" Sortable="true" Filterable="true" />                                    
                             <PropertyColumn Property="x => x.Type.ToString()" Title="Type" Sortable="true" Filterable="true" />    
-                            <PropertyColumn Property="x => getFieldIdClient.CheckGuidExistance(x.FieldID, fieldIdToNameDict)" Title="Field" Sortable="true" Filterable="true" />    
+                            <PropertyColumn Property="x => CheckGuidExistance(x.FieldID)" Title="Field" Sortable="true" Filterable="true" />    
                           
                             <TemplateColumn CellClass="d-flex justify-end" Sortable="false" Filterable="false">
                                 <CellTemplate>
@@ -126,7 +127,6 @@
     public bool isHiddenMainPanel;
     private string? _searchString;
     bool hidePartView = true;
-    private GetDigiWellClassClient getFieldIdClient = new GetDigiWellClassClient(TypeSelect.Field);
     private Guid fieldID;
     private Dictionary<Guid, string> fieldIdToNameDict = new();
     //Expand component lists
@@ -138,7 +138,19 @@
         editPanelOpen = false;
         await ReloadComponents();
     }
-
+    private string CheckGuidExistance(Guid? Id)
+    {
+        if (Id == null)
+            return ""; 
+        if (fieldIdToNameDict.ContainsKey((Guid) Id))
+        {
+            return fieldIdToNameDict[(Guid) Id];
+        }
+        else
+        {
+            return "";
+        }
+    }
 
     private void OnClickAdd() {
         addPanelOpen = true;
@@ -179,9 +191,10 @@
             // Starting all loading tasks asynchronously
             logger.LogInformation("Trying to load list of DrillStringComponent from client: " + APIUtils.HttpClientDrillString);
             var drillStringComponentTask = APIUtils.ClientDrillString.GetAllDrillStringComponentAsync();
-            await getFieldIdClient.GetAllAsync(fieldIdToNameDict);
+            List<Field> fields = (List<Field>) await APIUtils.ClientField.GetAllFieldAsync();  
+            fieldIdToNameDict = fields.ToDictionary(x => x.MetaInfo.ID, x => x.Name);
+            
             List<Task> loadingTaskList = new List<Task>() { drillStringComponentTask};
-
             // Awaiting tasks and retrieve results as they become available
             while (loadingTaskList.Count > 0)
             {
@@ -232,7 +245,9 @@
             // Starting all loading tasks asynchronously
             logger.LogInformation("Trying to load list of DrillStringComponent from client: " + APIUtils.HttpClientDrillString);
             var drillStringComponentTask = APIUtils.ClientDrillString.GetAllDrillStringComponentAsync();
-            await getFieldIdClient.GetAllAsync(fieldIdToNameDict);
+            List<Field> fields = (List<Field>) await APIUtils.ClientField.GetAllFieldAsync();  
+            fieldIdToNameDict = fields.ToDictionary(x => x.MetaInfo.ID, x => x.Name);
+          
             List<Task> loadingTaskList = new List<Task>() { drillStringComponentTask};
 
             // Awaiting tasks and retrieve results as they become available
@@ -398,12 +413,15 @@
 
     private async Task DeleteSelectedDrillStringComponent()
     {
-  
-        foreach (DrillStringComponent drillStringComponent in selectedDrillStringComponentList)
+        if (await ConfirmDeletion())
         {
-            await DeleteDrillStringComponent(drillStringComponent.MetaInfo.ID);
+            foreach (DrillStringComponent drillStringComponent in selectedDrillStringComponentList)
+            {
+                await APIUtils.ClientDrillString.DeleteDrillStringComponentByIdAsync(drillStringComponent.MetaInfo.ID);
+            }
+            selectedDrillStringComponentList.Clear();   
+            await OnInitializedAsync();     
         }
-        selectedDrillStringComponentList.Clear();        
     }
 
     //Quick filter - filter gobally across multiple columns with the same input

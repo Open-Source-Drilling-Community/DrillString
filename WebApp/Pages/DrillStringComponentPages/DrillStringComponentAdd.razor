@@ -21,7 +21,7 @@
             @if (fieldIdToNameDict != null)
             {                
                 <MudSelect @bind-Value="fieldID" Label="Field name" Dense="true" Class="ml-4"
-                    Text="@getFieldIdClient.CheckGuidExistance(fieldID, fieldIdToNameDict)">                                
+                    Text="@CheckGuidExistance(fieldID)">                                
                     @foreach (Guid fieldIdAndName in fieldIdToNameDict.Keys)
                     {
                         <MudSelectItem Value="@fieldIdAndName">@fieldIdToNameDict[fieldIdAndName]</MudSelectItem>
@@ -53,7 +53,6 @@
 </MudContainer>
 
 @code {    
-    private GetDigiWellClassClient getFieldIdClient = new GetDigiWellClassClient(TypeSelect.Field);
     private Dictionary<Guid, string> fieldIdToNameDict = new();
     private Guid fieldID {get; set;}
     private List<DrillStringComponentPart> drillStringComponentParts = new List<DrillStringComponentPart>()
@@ -82,8 +81,8 @@
     private DrillStringComponentTypes typeSelectOptions {get; set;} = DrillStringComponentTypes.DrillPipe;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        // Load fields from other microservices
-        await getFieldIdClient.GetAllAsync(fieldIdToNameDict);
+        List<Field> fields = (List<Field>) await APIUtils.ClientField.GetAllFieldAsync();  
+        fieldIdToNameDict = fields.ToDictionary(x => x.MetaInfo.ID, x => x.Name);
     }
     private void AddPart()
     {
@@ -107,6 +106,19 @@
                 SecondCrossSectionTorsionalInertia = null
             }
         );
+    }
+    private string CheckGuidExistance(Guid? Id)
+    {
+        if (Id == null)
+            return ""; 
+        if (fieldIdToNameDict.ContainsKey((Guid) Id))
+        {
+            return fieldIdToNameDict[(Guid) Id];
+        }
+        else
+        {
+            return "";
+        }
     }
     private void RemovePart() 
     {

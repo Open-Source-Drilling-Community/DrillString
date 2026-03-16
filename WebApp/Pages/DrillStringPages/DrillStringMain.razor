@@ -89,14 +89,9 @@
     private Dictionary<Guid, Cluster> clusterDicts = new();
     private Dictionary<Guid, Well> wellDicts = new();
     private Dictionary<Guid, WellBore> wellBoreDicts = new();
-
-    private List<DrillStringComponent> selectedDrillStringComponentList = new();
     [Inject] private IDialogService DialogService { get; set; }
-
-    private GetDigiWellClassClient getWellBoreIdClient = new GetDigiWellClassClient(TypeSelect.WellBore);
     private Guid wellboreID;
-    private Dictionary<Guid, string> wellboreIdToNameDict = new();
-
+    
     //Component related variables
     public bool AddComponentPanelOpen = false;
     // UI related variables
@@ -124,60 +119,40 @@
     }
     protected override async Task OnInitializedAsync()
     {
+        
+        // Show main panel
+        displayMainPanel = true;
+        displayEditPanel = false;
+        displayAddPanel = false;
+        currentDrillString = null;
+        var watch = System.Diagnostics.Stopwatch.StartNew();          
+        //Get IDs of available wellbores
+        // Starting all loading tasks asynchronously
+        logger.LogInformation("Trying to load list of DrillString from client: " + APIUtils.HostNameDrillString);
+        var drillStringTask = APIUtils.ClientDrillString.GetAllDrillStringAsync();
+        List<Task> loadingTaskList = new List<Task> { drillStringTask };        
+        watch = System.Diagnostics.Stopwatch.StartNew();
+        // Awaiting tasks and retrieve results as they become available            
         try
         {
-            // Show main panel
-            displayMainPanel = true;
-            displayEditPanel = false;
-            displayAddPanel = false;
-            currentDrillString = null;
-            //Get IDs of available wellbores
-            await getWellBoreIdClient.GetAllAsync(wellboreIdToNameDict);
-            // Starting all loading tasks asynchronously
-            //#if (Inheritance)
-            logger.LogInformation("Trying to load list of DrillStringComponent from client: " + APIUtils.HttpClientDrillString);
-            var drillStringComponentTask = APIUtils.ClientDrillString.GetAllDrillStringComponentAsync();
-            //#endif
-            logger.LogInformation("Trying to load list of DrillString from client: " + APIUtils.HostNameDrillString);
-            var drillStringTask = APIUtils.ClientDrillString.GetAllDrillStringAsync();
-
-            List<Task> loadingTaskList = new List<Task> { drillStringTask };
-            //#if (Inheritance)
-            loadingTaskList.Add(drillStringComponentTask);
-            //#endif
-
-            // Awaiting tasks and retrieve results as they become available
-            while (loadingTaskList.Count > 0)
+            drillStringList = (List<DrillString>)await drillStringTask; // awaiting the finished task allows to retrieve its result and throw exception if needed
+            if (drillStringList != null)
             {
-                Task finishedTask = await Task.WhenAny(loadingTaskList);
-                if (finishedTask == drillStringTask)
-                {
-                    try
-                    {
-                        drillStringList = (List<DrillString>)await drillStringTask; // awaiting the finished task allows to retrieve its result and throw exception if needed
-                        if (drillStringList != null)
-                        {
-                            drillStringList.Sort((t1, t2) => t1.Name.CompareTo(t2.Name));
-                        }
-                        else
-                        {
-                            logger.LogWarning("Returned list of DrillString were null on initialization");
-                            Snackbar.Add("Returned list of DrillString were null on initialization", Severity.Warning);
-                        }
-                    }
-                    catch (ApiException ex)
-                    {
-                        logger.LogError(ex, "Impossible to load DrillString from client");
-                    }
-                }
-
-                loadingTaskList.Remove(finishedTask);
+                drillStringList.Sort((t1, t2) => t1.Name.CompareTo(t2.Name));
+            }
+            else
+            {
+                logger.LogWarning("Returned list of DrillString were null on initialization");
+                Snackbar.Add("Returned list of DrillString were null on initialization", Severity.Warning);
             }
         }
-        catch (Exception ex)
+        catch (ApiException ex)
         {
-            logger.LogError(ex, "Problem DrillString initialization");
-        }
+            logger.LogError(ex, "Impossible to load DrillString from client");
+        }        
+        var elapsedMs = watch.ElapsedMilliseconds;
+        Console.WriteLine("Get DrillString wait time [ms]: " + elapsedMs.ToString());                                    
+        
         logger.LogInformation("Trying to load microservices through client: " + APIUtils.HttpClientField);
         try
         {
@@ -198,6 +173,7 @@
                     clusterDicts.Add(cluster.MetaInfo.ID, cluster);
                 }
             }
+            
             ICollection<Well> wells = await APIUtils.ClientWell.GetAllWellAsync();
             foreach (Well well in wells)
             {
@@ -206,6 +182,7 @@
                     wellDicts.Add(well.MetaInfo.ID, well);
                 }
             }
+            
             ICollection<WellBore> wellBores = await APIUtils.ClientWellBore.GetAllWellBoreAsync();
             foreach (WellBore wellBore in wellBores)
             {
@@ -213,7 +190,7 @@
                 {
                     wellBoreDicts.Add(wellBore.MetaInfo.ID, wellBore);
                 }
-            }
+            }         
         }
         catch (Exception ex)
         {
