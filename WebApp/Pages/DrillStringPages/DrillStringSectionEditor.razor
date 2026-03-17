@@ -27,12 +27,46 @@
                 <MudButton StartIcon="@Icons.Material.Filled.Remove"  IconColor="Color.Secondary"  OnClick="RemoveComponent " Size="Size.Small"> Remove component</MudButton>                                  
             </MudItem>
             <MudItem xs="11">
+                @*
+                <MudTable T="DrillStringComponent" @bind-Value="drillStringSectionComponents">
+                    <HeaderContent>
+                         <MudTh>Component</MudTh>
+                     </HeaderContent>
+                     <RowTemplate>
+                         <MudTd>
+                            <MudSelect T="DrillStringComponent" @bind-Value="context">                            
+                                @foreach (DrillStringComponent component in availableDrillStringComponents)
+                                {
+                                    <MudSelectItem Value="@component">
+                                        <MudGrid>
+                                            <MudItem xs="3" Class="ml-4">                          
+                                                <MudText Typo="Typo.body2"><b>@component.Name</b></MudText>                                                
+                                            </MudItem>
+                                            <MudItem xs="2" Class="ml-2">  
+                                                <MudText Style="@($"color:{Colors.Gray.Darken1};")" Typo="Typo.body2">@component.Type</MudText>                                                
+                                            </MudItem>
+                                            <!-- Format output-->                    
+                                            @foreach(DrillStringComponentPart part in component.PartList)
+                                            {
+                                                <MudItem xs="2" Class="ml-2">  
+                                                    <MudText Style="@($"color:{Colors.Gray.Darken1};")" Typo="Typo.body2">OD [@DiameterUnits()]: @ManageDiameter(part.OuterDiameter)</MudText>                                                     
+                                                    <MudText Style="@($"color:{Colors.Gray.Darken1};")" Typo="Typo.body2">ID [@DiameterUnits()]: @ManageDiameter(part.InnerDiameter)</MudText>                                                                             
+                                                </MudItem>
+                                            }
+                                        </MudGrid>       
+                                    </MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudTd>
+                     </RowTemplate>
+                </MudTable>
+                *@
                 @for(int i = 0; i < drillStringSectionComponents.Count; i++)
                 {
-                    compIndex = i;
-                    <MudSelect T="DrillStringComponent" Value="drillStringSectionComponents[compIndex]"
-                        Text="@drillStringSectionComponents[compIndex].Name" Label="@($"Name | Type | Parts OD/ID [{DiameterUnits()}]")" 
-                        Dense="true" ValueChanged="updateSection">
+                    int idx = i;
+                    <MudSelect T="DrillStringComponent" Value="drillStringSectionComponents[idx]"
+                        Text="@drillStringSectionComponents[idx].Name" Label="@($"Name | Type | Parts OD/ID [{DiameterUnits()}]")" 
+                        Dense="true" ValueChanged="val => updateSection(val, idx)">
                         <!-- loop components to add to the select box-->
                         @foreach (DrillStringComponent component in availableDrillStringComponents)
                         {
@@ -126,12 +160,12 @@
         }
         StateHasChanged();
     }
-    private void updateSection(DrillStringComponent? dsComponent)
+    private void updateSection(DrillStringComponent? dsComponent, int idx)
     {
         //If it is empty, add a value
         if (dsComponent != null && drillStringSection != null)
         {            
-            drillStringSectionComponents[compIndex] = dsComponent;
+            drillStringSectionComponents[idx] = dsComponent;
             drillStringSection.SectionComponentList = drillStringSectionComponents;
         }
     }
