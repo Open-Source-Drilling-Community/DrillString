@@ -1,3 +1,4 @@
+@inject IDrillStringAPIUtils Api
 
 @inject ISnackbar Snackbar
 @implements IUnitAwareComponent
@@ -81,7 +82,7 @@
     private DrillStringComponentTypes typeSelectOptions {get; set;} = DrillStringComponentTypes.DrillPipe;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        List<Field> fields = (List<Field>) await APIUtils.ClientField.GetAllFieldAsync();  
+        List<Field> fields = (List<Field>) await Api.ClientField.GetAllFieldAsync();  
         fieldIdToNameDict = fields.ToDictionary(x => x.MetaInfo.ID, x => x.Name);
     }
     private void AddPart()
@@ -150,7 +151,7 @@
            
             if (drillStringComponentPartList.Count > 0)
             {
-                MetaInfo metaInfo = new() { ID = Guid.NewGuid(), HttpHostName = APIUtils.HostNameDrillString, HttpHostBasePath = APIUtils.HostBasePathDrillString, HttpEndPoint = "DrillString/" };
+                MetaInfo metaInfo = new() { ID = Guid.NewGuid(), HttpHostName = Api.HostNameDrillString, HttpHostBasePath = Api.HostBasePathDrillString, HttpEndPoint = "DrillString/" };
                 DateTimeOffset creationDate = DateTimeOffset.UtcNow;
                 //Create instance of new element
                 DrillStringComponent currentDrillStringComponent = new DrillStringComponent 
@@ -163,7 +164,7 @@
                     FieldID = fieldID, 
                     PartList = drillStringComponentPartList
                 };            
-                await APIUtils.ClientDrillString.PostDrillStringComponentAsync(currentDrillStringComponent);
+                await Api.ClientDrillString.PostDrillStringComponentAsync(currentDrillStringComponent);
                 logger.LogInformation($"{typeSelectOptions.ToString()} component posted successfully");
                 Snackbar.Add($"{typeSelectOptions.ToString()} component posted successfully", Severity.Success);
                 //Restart values to default and go back to main drillpipe table

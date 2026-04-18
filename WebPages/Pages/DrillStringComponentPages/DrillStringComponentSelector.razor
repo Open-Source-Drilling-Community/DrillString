@@ -1,3 +1,4 @@
+@inject IDrillStringAPIUtils Api
 @implements IUnitAwareComponent
 @inject ILogger<MudInputWithUnitAdornment> logger
 
@@ -49,7 +50,7 @@
     {
         try
         {
-            drillStringComponents = await APIUtils.ClientDrillString.GetAllDrillStringComponentAsync();
+            drillStringComponents = (await Api.ClientDrillString.GetAllDrillStringComponentAsync()).ToList();
         }
         catch (Exception ex)
         {

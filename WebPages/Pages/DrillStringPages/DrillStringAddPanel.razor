@@ -1,4 +1,5 @@
-﻿@inject ILogger<DrillStringMain> logger
+@inject IDrillStringAPIUtils Api
+@inject ILogger<DrillStringMain> logger
 @inject ISnackbar Snackbar
 
 @if (DrillString != null)
@@ -154,13 +155,13 @@
                     DrillString.Name = $"Drill-string";
                 }
 
-                MetaInfo metaInfo = new() { ID = Guid.NewGuid(), HttpHostName = APIUtils.HostNameDrillString, HttpHostBasePath = APIUtils.HostBasePathDrillString, HttpEndPoint = "DrillString/" };
+                MetaInfo metaInfo = new() { ID = Guid.NewGuid(), HttpHostName = Api.HostNameDrillString, HttpHostBasePath = Api.HostBasePathDrillString, HttpEndPoint = "DrillString/" };
                 DateTimeOffset creationDate = DateTimeOffset.UtcNow;
                 DrillString.MetaInfo = metaInfo;
                 DrillString.CreationDate = creationDate;
                 DrillString.LastModificationDate = creationDate;
                 DrillString.WellBoreID = (_selectedWellBore != null && _selectedWellBore.MetaInfo != null && _selectedWellBore.MetaInfo.ID != Guid.Empty) ? _selectedWellBore.MetaInfo.ID : null;
-                await APIUtils.ClientDrillString.PostDrillStringAsync(DrillString);
+                await Api.ClientDrillString.PostDrillStringAsync(DrillString);
                 logger.LogInformation("Drill-string posted successfully");
                 Snackbar.Add("Drill-string posted successfully", Severity.Success);
             }
@@ -211,8 +212,8 @@
         {
             //Clear old lists
             drillStringComponentList.Clear();
-            logger.LogInformation("Trying to load list of DrillStringComponent from client: " + APIUtils.HttpClientDrillString);
-            var drillStringComponentTask = APIUtils.ClientDrillString.GetAllDrillStringComponentAsync();
+            logger.LogInformation("Trying to load list of DrillStringComponent from client: " + Api.HttpClientDrillString);
+            var drillStringComponentTask = Api.ClientDrillString.GetAllDrillStringComponentAsync();
             List<Task> loadingTaskList = new List<Task>() { drillStringComponentTask };
             while (loadingTaskList.Count > 0)
             {
@@ -258,3 +259,4 @@
         }
     }
 }
+

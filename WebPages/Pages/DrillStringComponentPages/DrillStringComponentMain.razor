@@ -1,10 +1,11 @@
-﻿@page "/DrillStringComponent"
+@inject IDrillStringAPIUtils Api
+@page "/DrillStringComponent"
 @using Plotly.Blazor.Traces.IsoSurfaceLib.CapsLib
 @inject ILogger<DrillStringComponentMain> logger
 @inject ISnackbar Snackbar
 @implements IUnitAwareComponent
-<MudUnitAndReferenceChoiceTag HttpHost=@APIUtils.HostNameUnitConversion
-                              HttpBasePath=@APIUtils.HostBasePathUnitConversion
+<MudUnitAndReferenceChoiceTag HttpHost=@Api.HostNameUnitConversion
+                              HttpBasePath=@Api.HostBasePathUnitConversion
                               HttpController="UnitSystem/"
                               UnitSystemName="@DataUtils.UnitAndReferenceParameters.UnitSystemName"
                               UnitSystemNameChanged="@DataUtils.UpdateUnitSystemName">
@@ -189,9 +190,9 @@
             //Get Info from Fields app
 
             // Starting all loading tasks asynchronously
-            logger.LogInformation("Trying to load list of DrillStringComponent from client: " + APIUtils.HttpClientDrillString);
-            var drillStringComponentTask = APIUtils.ClientDrillString.GetAllDrillStringComponentAsync();
-            List<Field> fields = (List<Field>) await APIUtils.ClientField.GetAllFieldAsync();  
+            logger.LogInformation("Trying to load list of DrillStringComponent from client: " + Api.HttpClientDrillString);
+            var drillStringComponentTask = Api.ClientDrillString.GetAllDrillStringComponentAsync();
+            List<Field> fields = (List<Field>) await Api.ClientField.GetAllFieldAsync();  
             fieldIdToNameDict = fields.ToDictionary(x => x.MetaInfo.ID, x => x.Name);
             
             List<Task> loadingTaskList = new List<Task>() { drillStringComponentTask};
@@ -243,9 +244,9 @@
             //Get Info from Fields app
 
             // Starting all loading tasks asynchronously
-            logger.LogInformation("Trying to load list of DrillStringComponent from client: " + APIUtils.HttpClientDrillString);
-            var drillStringComponentTask = APIUtils.ClientDrillString.GetAllDrillStringComponentAsync();
-            List<Field> fields = (List<Field>) await APIUtils.ClientField.GetAllFieldAsync();  
+            logger.LogInformation("Trying to load list of DrillStringComponent from client: " + Api.HttpClientDrillString);
+            var drillStringComponentTask = Api.ClientDrillString.GetAllDrillStringComponentAsync();
+            List<Field> fields = (List<Field>) await Api.ClientField.GetAllFieldAsync();  
             fieldIdToNameDict = fields.ToDictionary(x => x.MetaInfo.ID, x => x.Name);
           
             List<Task> loadingTaskList = new List<Task>() { drillStringComponentTask};
@@ -302,7 +303,7 @@
            
             if (drillStringComponentPartList.Count > 0)
             {
-                MetaInfo metaInfo = new() { ID = Guid.NewGuid(), HttpHostName = APIUtils.HostNameDrillString, HttpHostBasePath = APIUtils.HostBasePathDrillString, HttpEndPoint = "DrillString/" };
+                MetaInfo metaInfo = new() { ID = Guid.NewGuid(), HttpHostName = Api.HostNameDrillString, HttpHostBasePath = Api.HostBasePathDrillString, HttpEndPoint = "DrillString/" };
                 DateTimeOffset creationDate = DateTimeOffset.UtcNow;
                 //Create instance of new element
                 DrillStringComponent currentDrillStringComponent = new DrillStringComponent 
@@ -315,7 +316,7 @@
                     FieldID = fieldID, 
                     PartList = drillStringComponentPartList
                 };            
-                await APIUtils.ClientDrillString.PostDrillStringComponentAsync(currentDrillStringComponent);
+                await Api.ClientDrillString.PostDrillStringComponentAsync(currentDrillStringComponent);
                 logger.LogInformation($"{typeSelectOptions.ToString()} component posted successfully");
                 Snackbar.Add($"{typeSelectOptions.ToString()} component posted successfully", Severity.Success);
                 //Restart values to default and go back to main drillpipe table
@@ -344,7 +345,7 @@
     {
         try
         {
-            drillStringComponentToEdit = await APIUtils.ClientDrillString.GetDrillStringComponentByIdAsync(id);
+            drillStringComponentToEdit = await Api.ClientDrillString.GetDrillStringComponentByIdAsync(id);
             if (drillStringComponentToEdit != null)
             {
                 drillStringComponentPartsToEdit.Clear();
@@ -374,7 +375,7 @@
             bool confirmation = await ConfirmDeletion();
             if (confirmation)
             {
-                await APIUtils.ClientDrillString.DeleteDrillStringComponentByIdAsync(id);
+                await Api.ClientDrillString.DeleteDrillStringComponentByIdAsync(id);
             }
         }
         catch (Exception ex)
@@ -387,11 +388,11 @@
     {
         try
         {
-            DrillStringComponent drillStringComponentToClone = await APIUtils.ClientDrillString.GetDrillStringComponentByIdAsync(id);
-            MetaInfo metaInfo = new() { ID = Guid.NewGuid(), HttpHostName = APIUtils.HostNameDrillString, HttpHostBasePath = APIUtils.HostBasePathDrillString, HttpEndPoint = "DrillString/" };
+            DrillStringComponent drillStringComponentToClone = await Api.ClientDrillString.GetDrillStringComponentByIdAsync(id);
+            MetaInfo metaInfo = new() { ID = Guid.NewGuid(), HttpHostName = Api.HostNameDrillString, HttpHostBasePath = Api.HostBasePathDrillString, HttpEndPoint = "DrillString/" };
             drillStringComponentToClone.MetaInfo = metaInfo;
             drillStringComponentToClone.Name = "Copy of " + drillStringComponentToClone.Name;
-            await APIUtils.ClientDrillString.PostDrillStringComponentAsync(drillStringComponentToClone);
+            await Api.ClientDrillString.PostDrillStringComponentAsync(drillStringComponentToClone);
             await OnInitializedAsync();
         }
         catch (Exception ex)
@@ -417,7 +418,7 @@
         {
             foreach (DrillStringComponent drillStringComponent in selectedDrillStringComponentList)
             {
-                await APIUtils.ClientDrillString.DeleteDrillStringComponentByIdAsync(drillStringComponent.MetaInfo.ID);
+                await Api.ClientDrillString.DeleteDrillStringComponentByIdAsync(drillStringComponent.MetaInfo.ID);
             }
             selectedDrillStringComponentList.Clear();   
             await OnInitializedAsync();     
@@ -493,3 +494,4 @@
         await OnInitializedAsync();
     }
 }
+

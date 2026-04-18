@@ -1,8 +1,9 @@
-﻿using OSDC.UnitConversion.DrillingRazorMudComponents;
+using OSDC.UnitConversion.DrillingRazorMudComponents;
+
+namespace NORCE.Drilling.DrillString.WebPages.Shared;
 
 public static class DataUtils
 {
-    // default values
     public const double DEFAULT_VALUE = 999.25;
     public static string DEFAULT_NAME_DrillString = "Default DrillString Name";
     public static string DEFAULT_DESCR_DrillString = "Default DrillString Description";
@@ -12,9 +13,6 @@ public static class DataUtils
     public static string FLOATING_COLOUR = "rgba(67, 49, 228, 0.86)";
     public static string FLOATING_POSITION = "absolute; top: 25%; left: 20%; width: 75%";
 
-
-
-    // unit management
     public static class UnitAndReferenceParameters
     {
         public static string? UnitSystemName { get; set; } = "Metric";
@@ -23,18 +21,17 @@ public static class DataUtils
         public static string? AzimuthReferenceName { get; set; }
         public static string? PressureReferenceName { get; set; }
         public static string? DateReferenceName { get; set; }
-        public static GroundMudLineDepthReferenceSource GroundMudLineDepthReferenceSource { get; set; } = new GroundMudLineDepthReferenceSource();
-        public static RotaryTableDepthReferenceSource RotaryTableDepthReferenceSource { get; set; } = new RotaryTableDepthReferenceSource();
-        public static SeaWaterLevelDepthReferenceSource SeaWaterLevelDepthReferenceSource { get; set; } = new SeaWaterLevelDepthReferenceSource();
-        public static WellHeadDepthReferenceSource WellHeadDepthReferenceSource { get; set; } = new WellHeadDepthReferenceSource();
+        public static GroundMudLineDepthReferenceSource GroundMudLineDepthReferenceSource { get; set; } = new();
+        public static RotaryTableDepthReferenceSource RotaryTableDepthReferenceSource { get; set; } = new();
+        public static SeaWaterLevelDepthReferenceSource SeaWaterLevelDepthReferenceSource { get; set; } = new();
+        public static WellHeadDepthReferenceSource WellHeadDepthReferenceSource { get; set; } = new();
     }
 
     public static void UpdateUnitSystemName(string val)
     {
-        UnitAndReferenceParameters.UnitSystemName = (string)val;
+        UnitAndReferenceParameters.UnitSystemName = val;
     }
 
-    // units and labels
     public static readonly string DrillStringDrillStringComponentListLabel = "DrillStringComponentList";
     public static readonly string DrillStringOutputParamLabel = "DrillStringOutputParam";
     public static readonly string DrillStringNameLabel = "DrillString name";
@@ -61,5 +58,4 @@ public static class DataUtils
     public static readonly string OutputXValuesQty = "DepthDrilling";
     public static readonly string OutputYValuesTitle = "Y value";
     public static readonly string OutputYValuesQty = "Length";
-
 }

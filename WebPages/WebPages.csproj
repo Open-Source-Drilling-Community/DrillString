@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <RootNamespace>NORCE.Drilling.DrillString.WebPages</RootNamespace>
+    <PackageId>NORCE.Drilling.DrillString.WebPages</PackageId>
+    <Title>NORCE.Drilling.DrillString.WebPages</Title>
+    <Description>Reusable Razor class library containing the DrillString web pages and related components. See the package README for setup, dependencies, and usage.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Authors>Eric Cayeux</Authors>
+    <Company>NORCE</Company>
+    <PackageProjectUrl>https://github.com/open-source-drilling-community/DrillString</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/open-source-drilling-community/DrillString</RepositoryUrl>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MudBlazor" Version="8.14.0" />
+    <PackageReference Include="OSDC.DotnetLibraries.Drilling.WebAppUtils" Version="1.1.0" />
+    <PackageReference Include="OSDC.DotnetLibraries.General.DataManagement" Version="2.1.0" />
+    <PackageReference Include="OSDC.UnitConversion.DrillingRazorMudComponents" Version="3.3.47" />
+    <PackageReference Include="Plotly.Blazor" Version="6.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ModelSharedOut\ModelSharedOut.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

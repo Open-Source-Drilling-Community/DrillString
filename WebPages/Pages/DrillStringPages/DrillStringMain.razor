@@ -1,10 +1,11 @@
-﻿@page "/DrillString"
+@inject IDrillStringAPIUtils Api
+@page "/DrillString"
 @inject ILogger<DrillStringMain> logger
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 
-<MudUnitAndReferenceChoiceTag HttpHost=@APIUtils.HostNameUnitConversion
-                              HttpBasePath=@APIUtils.HostBasePathUnitConversion
+<MudUnitAndReferenceChoiceTag HttpHost=@Api.HostNameUnitConversion
+                              HttpBasePath=@Api.HostBasePathUnitConversion
                               HttpController="UnitSystem/"
                               UnitSystemName="@DataUtils.UnitAndReferenceParameters.UnitSystemName"
                               UnitSystemNameChanged="@DataUtils.UpdateUnitSystemName">
@@ -128,8 +129,8 @@
         var watch = System.Diagnostics.Stopwatch.StartNew();          
         //Get IDs of available wellbores
         // Starting all loading tasks asynchronously
-        logger.LogInformation("Trying to load list of DrillString from client: " + APIUtils.HostNameDrillString);
-        var drillStringTask = APIUtils.ClientDrillString.GetAllDrillStringAsync();
+        logger.LogInformation("Trying to load list of DrillString from client: " + Api.HostNameDrillString);
+        var drillStringTask = Api.ClientDrillString.GetAllDrillStringAsync();
         List<Task> loadingTaskList = new List<Task> { drillStringTask };        
         watch = System.Diagnostics.Stopwatch.StartNew();
         // Awaiting tasks and retrieve results as they become available            
@@ -153,11 +154,11 @@
         var elapsedMs = watch.ElapsedMilliseconds;
         Console.WriteLine("Get DrillString wait time [ms]: " + elapsedMs.ToString());                                    
         
-        logger.LogInformation("Trying to load microservices through client: " + APIUtils.HttpClientField);
+        logger.LogInformation("Trying to load microservices through client: " + Api.HttpClientField);
         try
         {
             // get guid and name from external microservices
-            ICollection<Field> fields = await APIUtils.ClientField.GetAllFieldAsync();
+            ICollection<Field> fields = await Api.ClientField.GetAllFieldAsync();
             foreach (Field field in fields)
             {
                 if (!fieldDicts.ContainsKey(field.MetaInfo.ID))
@@ -165,7 +166,7 @@
                     fieldDicts.Add(field.MetaInfo.ID, field);
                 }
             }
-            ICollection<Cluster> clusters = await APIUtils.ClientCluster.GetAllClusterAsync();
+            ICollection<Cluster> clusters = await Api.ClientCluster.GetAllClusterAsync();
             foreach (Cluster cluster in clusters)
             {
                 if (!clusterDicts.ContainsKey(cluster.MetaInfo.ID))
@@ -174,7 +175,7 @@
                 }
             }
             
-            ICollection<Well> wells = await APIUtils.ClientWell.GetAllWellAsync();
+            ICollection<Well> wells = await Api.ClientWell.GetAllWellAsync();
             foreach (Well well in wells)
             {
                 if (!wellDicts.ContainsKey(well.MetaInfo.ID))
@@ -183,7 +184,7 @@
                 }
             }
             
-            ICollection<WellBore> wellBores = await APIUtils.ClientWellBore.GetAllWellBoreAsync();
+            ICollection<WellBore> wellBores = await Api.ClientWellBore.GetAllWellBoreAsync();
             foreach (WellBore wellBore in wellBores)
             {
                 if (!wellBoreDicts.ContainsKey(wellBore.MetaInfo.ID))
@@ -228,7 +229,7 @@
     {
         try
         {
-            currentDrillString = await APIUtils.ClientDrillString.GetDrillStringByIdAsync(id);
+            currentDrillString = await Api.ClientDrillString.GetDrillStringByIdAsync(id);
             if (currentDrillString != null)
             {
                 displayMainPanel = false;
@@ -256,7 +257,7 @@
             bool confirmation = await ConfirmDeletion();
             if (confirmation)
             {
-                await APIUtils.ClientDrillString.DeleteDrillStringByIdAsync(id);
+                await Api.ClientDrillString.DeleteDrillStringByIdAsync(id);
                 await OnInitializedAsync();
             }
         }
@@ -273,11 +274,11 @@
     {
         try
         {
-            DrillString drillStringToClone = await APIUtils.ClientDrillString.GetDrillStringByIdAsync(id);
-            MetaInfo metaInfo = new() { ID = Guid.NewGuid(), HttpHostName = APIUtils.HostNameDrillString, HttpHostBasePath = APIUtils.HostBasePathDrillString, HttpEndPoint = "DrillString/" };
+            DrillString drillStringToClone = await Api.ClientDrillString.GetDrillStringByIdAsync(id);
+            MetaInfo metaInfo = new() { ID = Guid.NewGuid(), HttpHostName = Api.HostNameDrillString, HttpHostBasePath = Api.HostBasePathDrillString, HttpEndPoint = "DrillString/" };
             drillStringToClone.MetaInfo = metaInfo;
             drillStringToClone.Name = "Copy of " + drillStringToClone.Name;
-            await APIUtils.ClientDrillString.PostDrillStringAsync(drillStringToClone);
+            await Api.ClientDrillString.PostDrillStringAsync(drillStringToClone);
             await OnInitializedAsync();
         }
         catch (Exception ex)
@@ -295,7 +296,7 @@
             {
                 foreach (DrillString drillString in selectedDrillStringList)
                 {
-                    await APIUtils.ClientDrillString.DeleteDrillStringByIdAsync(drillString.MetaInfo.ID);
+                    await Api.ClientDrillString.DeleteDrillStringByIdAsync(drillString.MetaInfo.ID);
                 }
                 await OnInitializedAsync();
             }
@@ -345,7 +346,7 @@
     private async Task OpenAddPanel()
     {
 
-        await APIUtils.ClientDrillString.PostDrillStringAsync(
+        await Api.ClientDrillString.PostDrillStringAsync(
                 PseudoConstructors.ConstructDrillString()
             );
         await OnInitializedAsync(); 
@@ -358,3 +359,4 @@
         await OnInitializedAsync();
     }
 }
+

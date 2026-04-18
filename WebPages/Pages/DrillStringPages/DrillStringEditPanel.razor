@@ -1,3 +1,4 @@
+@inject IDrillStringAPIUtils Api
 @inject ILogger<DrillString> logger
 @inject ISnackbar Snackbar
 
@@ -113,8 +114,8 @@
                     <MudPaper Class="mx-4 my-4 py-1">
                         <MudToolBar Class="ml-2 mb-2">
                             <MudItem xs="6">
-                                <MudText Typo="Typo.body1"><b>Section name: </b>@(DrillString.DrillStringSectionList[i].Name)</MudText>
-                                <MudText Typo="Typo.body1"><b>Repetitions: </b>@(DrillString.DrillStringSectionList[i].Count)</MudText>
+                                <MudText Typo="Typo.body1"><b>Section name: </b>@(DrillString.DrillStringSectionList.ElementAt(i).Name)</MudText>
+                                <MudText Typo="Typo.body1"><b>Repetitions: </b>@(DrillString.DrillStringSectionList.ElementAt(i).Count)</MudText>
                             </MudItem>
                             <MudSpacer />
                             <MudItem xs="1">
@@ -126,7 +127,7 @@
                         </MudToolBar>
                         <MudCollapse Expanded="@visibleSectionBool[i]">
                             <MudDataGrid Class="my-2 mx-2" T="DrillStringComponent" 
-                                Items="@(DrillString.DrillStringSectionList[i].SectionComponentList)" Striped="true">
+                                Items="@(DrillString.DrillStringSectionList.ElementAt(i).SectionComponentList)" Striped="true">
                                 <Columns>
                                     <PropertyColumn Property="x => x.Name" Title="Name" />
                                     <PropertyColumn Property="x => (x.FieldID != null && Fields != null && Fields.ContainsKey(x.FieldID.Value)) ? Fields[x.FieldID.Value].Name : string.Empty" Title="Field" />
@@ -217,8 +218,8 @@
         {
             //Clear old lists
             availableDrillStringComponents.Clear();
-            logger.LogInformation("Trying to load list of DrillStringComponent from client: " + APIUtils.HttpClientDrillString);
-            var drillStringComponentTask = APIUtils.ClientDrillString.GetAllDrillStringComponentAsync();
+            logger.LogInformation("Trying to load list of DrillStringComponent from client: " + Api.HttpClientDrillString);
+            var drillStringComponentTask = Api.ClientDrillString.GetAllDrillStringComponentAsync();
             List<Task> loadingTaskList = new List<Task>() { drillStringComponentTask };
             while (loadingTaskList.Count > 0)
             {
@@ -249,7 +250,7 @@
             }
             if (DrillString != null)
             {
-                sensorsList = DrillString.SensorsList;
+                sensorsList = DrillString.SensorsList?.ToList();
                 if (DrillString.DrillStringSectionList != null)
                 {
                     UpdateSectionListSize(DrillString.DrillStringSectionList.Count);
@@ -257,15 +258,15 @@
                 Guid? dsWellBoreID = DrillString.WellBoreID;
                 if (dsWellBoreID != null && dsWellBoreID != Guid.Empty)
                 {
-                    WellBore wellBore = await APIUtils.ClientWellBore.GetWellBoreByIdAsync(dsWellBoreID.Value);
+                    WellBore wellBore = await Api.ClientWellBore.GetWellBoreByIdAsync(dsWellBoreID.Value);
                     if (wellBore != null && wellBore.WellID != null && wellBore.WellID != Guid.Empty)
                     {
                         _selectedWellBore = wellBore;
-                        Well well = await APIUtils.ClientWell.GetWellByIdAsync(wellBore.WellID.Value);
+                        Well well = await Api.ClientWell.GetWellByIdAsync(wellBore.WellID.Value);
                         if (well != null && well.ClusterID != null && well.ClusterID != Guid.Empty)
                         {
                             _selectedWell = well;
-                            Cluster cluster = await APIUtils.ClientCluster.GetClusterByIdAsync(well.ClusterID.Value);
+                            Cluster cluster = await Api.ClientCluster.GetClusterByIdAsync(well.ClusterID.Value);
                             if (cluster != null && cluster.FieldID != null && cluster.FieldID != Guid.Empty)
                             {
                                 if (cluster.ReferenceDepth != null && cluster.ReferenceDepth.GaussianValue != null && cluster.ReferenceDepth.GaussianValue.Mean != null)
@@ -288,7 +289,7 @@
                                 {
                                     _selectedCluster = cluster;
                                 }
-                                Field field = await APIUtils.ClientField.GetFieldByIdAsync(cluster.FieldID.Value);
+                                Field field = await Api.ClientField.GetFieldByIdAsync(cluster.FieldID.Value);
                                 if (field != null)
                                 {
                                     _selectedField = field;
@@ -457,7 +458,7 @@
                 DateTimeOffset modificationDate = DateTimeOffset.UtcNow;
                 DrillString.WellBoreID = (_selectedWellBore != null && _selectedWellBore.MetaInfo != null && _selectedWellBore.MetaInfo.ID != Guid.Empty) ? _selectedWellBore.MetaInfo.ID : null;
                 DrillString.LastModificationDate = modificationDate;
-                await APIUtils.ClientDrillString.PutDrillStringByIdAsync(DrillString.MetaInfo.ID, DrillString);
+                await Api.ClientDrillString.PutDrillStringByIdAsync(DrillString.MetaInfo.ID, DrillString);
                 logger.LogInformation("Drill-string updated successfully");
                 Snackbar.Add("Drill-string updated successfully", Severity.Success);
             }

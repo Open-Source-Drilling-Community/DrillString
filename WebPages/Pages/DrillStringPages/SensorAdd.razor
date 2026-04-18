@@ -59,8 +59,8 @@
                     {
                         int j = index; // Capture the current index for use in the lambda expression
                         <MudInputAngleWithUnit VariantType="Variant.Text"                             
-                                SIValue="SensorModel[i].SensorAngles[j]" 
-                                SIValueChanged="val => SensorModel[i].SensorAngles[j] = val"/>                                
+                                SIValue="SensorModel[i].SensorAngles.ElementAt(j)" 
+                                SIValueChanged="val => SetAngle(SensorModel[i], j, val)"/>                                
                     }                                                
                 </MudItem>
                 <!-- Delete Button -->        
@@ -231,6 +231,26 @@
             context.SensorAngles.Add(item);
         }
         await SendMessage();
+    }
+    private void SetAngle(DrillStringSensor context, int index, double value)
+    {
+        if (context.SensorAngles == null)
+        {
+            context.SensorAngles = new List<double>();
+        }
+
+        var angles = context.SensorAngles.ToList();
+        if (index < 0 || index >= angles.Count)
+        {
+            return;
+        }
+
+        angles[index] = value;
+        context.SensorAngles.Clear();
+        foreach (var angle in angles)
+        {
+            context.SensorAngles.Add(angle);
+        }
     }
     private async Task AddSensorType(int sensorIndex)
     {           

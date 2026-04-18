@@ -1,3 +1,4 @@
+@inject IDrillStringAPIUtils Api
 @implements IUnitAwareComponent
 @inject ILogger<MudInputWithUnitAdornment> logger
 @inject ILogger<DrillStringMain> logger
@@ -123,8 +124,8 @@
         {
             //Clear old lists
             availableDrillStringComponents.Clear();
-            logger.LogInformation("Trying to load list of DrillStringComponent from client: " + APIUtils.HttpClientDrillString);
-            var drillStringComponentTask = APIUtils.ClientDrillString.GetAllDrillStringComponentAsync();
+            logger.LogInformation("Trying to load list of DrillStringComponent from client: " + Api.HttpClientDrillString);
+            var drillStringComponentTask = Api.ClientDrillString.GetAllDrillStringComponentAsync();
             List<Task> loadingTaskList = new List<Task>() { drillStringComponentTask};
             while (loadingTaskList.Count > 0)
             {
