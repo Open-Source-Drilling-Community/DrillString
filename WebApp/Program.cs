@@ -35,7 +35,8 @@ builder.Services.AddSingleton<IDrillStringAPIUtils, DrillStringAPIUtils>();
 var app = builder.Build();
 
 app.UseForwardedHeaders();
-app.UsePathBase("/DrillString/webapp");
+var basePath = "/drillstring/webapp";
+app.UsePathBase(basePath);
 
 if (!app.Environment.IsDevelopment())
 {
@@ -51,3 +52,4 @@ app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
 app.Run();
+
