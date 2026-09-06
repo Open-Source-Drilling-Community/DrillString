@@ -1,5 +1,7 @@
 # NORCE.Drilling.DrillString.WebPages
 
+This release targets MudBlazor 9.9.0 and the matching OSDC shared web component packages.
+
 Reusable Razor class library containing the DrillString web pages and dependent editor components extracted from the `WebApp` host.
 
 ## Included UI
